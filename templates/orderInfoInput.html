@@ -1,0 +1,229 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <script>
+    window._userId = "{{ userId }}"
+    window._recipientId = "{{ recipientId }}"
+    window._orderId = "{{ orderId }}"
+    window._shoppingCart = util.decodeJSON("{{ cart }}")
+  </script>
+  <div class="ui main container">
+    <div class="ui clearing basic segment">
+      <h3 class="ui left floated header">
+        Order Info Input
+      </h3>
+      <h3 class="ui right floated header" id="total_div" style="display:none">
+        Total: <span id="order_total"></span>
+      </h3>
+    </div>
+  </div>
+  <div class="ui container">
+    <div class="ui four top attached steps">
+      <div class="active step">
+        <i class="info icon"></i>
+        <div class="content">
+          <div class="title">
+            Info Input
+          </div>
+          <div class="description">
+            Order info
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <i class="truck icon"></i>
+        <div class="content">
+          <div class="title">
+            Shipping
+          </div>
+          <div class="description">
+            Shipping option
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <i class="list layout icon"></i>
+        <div class="content">
+          <div class="title">
+            Review
+          </div>
+          <div class="description">
+            Confirm order
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <i class="payment icon"></i>
+        <div class="content">
+          <div class="title">
+            Payment
+          </div>
+          <div class="description">
+            Select payment
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ui main container">
+    <div class="ui segment loading_wrapper" style="min-height: 600px;">
+      <div class="ui active inverted dimmer">
+        <div class="ui text loader">
+          Loading
+        </div>
+      </div>
+      <p></p>
+    </div>
+    <div class="loaded_wrapper" style="display: none">
+      <div class="ui main container">
+        <form class="ui form" id="billing_form" METHOD="POST">
+          <div class="ui segments">
+            <div class="ui segment">
+              <div class="ui blue basic ribbon label">
+                Billing Info
+              </div>
+              <p></p>
+              <div class="two fields">
+                <div class="field required">
+                  <label>First name</label>
+                  <input type="text" name="first_name" placeholder="Input your first name" maxlength="50" />
+                </div>
+                <div class="field required">
+                  <label>Last name</label>
+                  <input type="text" name="last_name" placeholder="Input your last name" maxlength="50" />
+                </div>
+              </div>
+              <div class="two fields">
+                <div class="field required">
+                  <label>Email</label>
+                  <input type="email" name="email" placeholder="Your email" maxlength="100" />
+                </div>
+                <div class="field required">
+                  <label>Phone</label>
+                  <input type="text" name="phone" placeholder="Phone number" maxlength="30" />
+                </div>
+              </div>
+              <div class="field required">
+                <label>Billing Address 1</label>
+                <input type="text" name="address1" placeholder="Room, floor, building, Street" maxlength="200" />
+              </div>
+              <div class="field">
+                <label>Billing Address 2</label>
+                <input type="text" name="address2" placeholder="District" maxlength="200" />
+              </div>
+              <div class="two fields">
+                <div class="field required">
+                  <label>Country</label>
+                  <select class="ui search dropdown" name="country">
+                    <option value="">Type to search</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Postal Code</label>
+                  <input type="text" name="postal" placeholder="Zip code (U.S.)" />
+                </div>
+              </div>
+              <div class="two fields">
+                <div class="field">
+                  <label>City</label>
+                  <input type="text" name="city" placeholder="optional" />
+                </div>
+                <div class="field">
+                  <label>State</label>
+                  <select class="ui search dropdown" name="state"></select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="ui main container">
+        <div class="ui segments">
+          <div class="ui segment">
+            <div class="ui blue basic ribbon label">
+              Shipping Info
+            </div>
+            <p></p>
+            <div class="field">
+              <div class="ui checkbox">
+                <input type="checkbox" tabindex="0" class="hidden" name="same_as_billing" />
+                <label>Same as billing</label>
+              </div>
+            </div>
+            <p></p>
+            <form class="ui form" id="shipping_form" METHOD="POST">
+              <div class="two fields">
+                <div class="field required">
+                  <label>First name</label>
+                  <input type="text" name="first_name" placeholder="Input your first name" maxlength="50" />
+                </div>
+                <div class="field required">
+                  <label>Last name</label>
+                  <input type="text" name="last_name" placeholder="Input your last name" maxlength="50" />
+                </div>
+              </div>
+              <div class="field required">
+                <label>Billing Address 1</label>
+                <input type="text" name="address1" placeholder="Room, floor, building, Street" maxlength="200" />
+              </div>
+              <div class="field">
+                <label>Billing Address 2</label>
+                <input type="text" name="address2" placeholder="District" maxlength="200" />
+              </div>
+              <div class="two fields">
+                <div class="field required">
+                  <label>Country</label>
+                  <select class="ui search dropdown" name="country">
+                    <option value="">Type to search</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Postal Code</label>
+                  <input type="text" name="postal" placeholder="Zip code (U.S.)" />
+                </div>
+              </div>
+              <div class="two fields">
+                <div class="field">
+                  <label>City</label>
+                  <input type="text" name="city" placeholder="optional" />
+                </div>
+                <div class="field">
+                  <label>State</label>
+                  <select class="ui search dropdown" name="state"></select>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="ui main container">
+        <button class="ui primary button" id="btn_proceed">
+          Proceed To Ship Method
+        </button>
+        <button class="ui button" id="btn_back">
+          Back To Shopping Cart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"></div>
+  <div class="ui modal" id="dlg_discardwarn">
+    <i class="close icon"></i>
+    <div class="header">
+      <i class="warning sign icon"></i>Warning
+    </div>
+    <div class="image content">
+      <div class="description">
+        Are you sure discard all inputs?
+      </div>
+    </div>
+    <div class="actions">
+      <div class="ui negative basic button" id="btn_ok">OK</div>
+      <div class="ui button" id="btn_cancel">Cancel</div>
+    </div>
+  </div>
+</body>
+
+<script src="https://s3.amazonaws.com/lambda-statics-us/wcbot/js/orderInfoInput.js"></script>
+{% endblock %}

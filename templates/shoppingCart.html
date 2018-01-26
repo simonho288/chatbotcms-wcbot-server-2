@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <script>
+    //- Pass the cart items from server template to frontend
+    window._userId = "{{ userId }}"
+    window._recipientId = "{{ recipientId }}"
+    window._orderId = "{{ orderId }}"
+    window._shoppingCart = util.decodeJSON("{{ cart }}")
+  </script>
+
+  <div class="ui loading_wrapper" style="min-height: 600px;">
+    <div class="ui active inverted dimmer">
+      <div class="ui text loader Loading">
+      </div>
+    </div>
+    <p></p>
+  </div>
+  <div class="loaded_wrapper" style="display: none">
+    <div class="ui main container shoppingCart">
+      <div class="ui clearing basic segment">
+        <h3 class="ui left floated header">
+          <i class="shopping basket icon"></i>
+          <div class="content">
+            <span>Shopping Cart</span>
+            <div class="cart_total">
+              Total: <span id="amount">--</span>
+            </div>
+          </div>
+        </h3>
+        <h3 class="ui right floated header">
+          <button class="ui primary button" id="btn_checkout">Checkout</button>
+        </h3>
+      </div>
+
+      <form class="large">
+        <div class="ui.grid">
+          <div class="column">
+            <div class="ui stackable centered cards" id="cartitems_div"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Template for a cart item -->
+  <script id="cartItem" type="text/template">
+    <div class="ui card" data-itemid="item_itemId">
+      <div class="image">
+        <img src="item_image" />
+      </div>
+      <div class="content">
+        <div class="header">
+          item_itemName
+        </div>
+        <div class="description">
+          <span class="left floated">
+            <span class="unit_price">
+              Price: item_unitPrice
+            </span>
+          </span>
+          <span class="right floated">
+            <span class="sub_total">
+              Sub-total: item_subTotal
+            </span>
+          </span>
+        </div>
+      </div>
+      <div class="extra content">
+        <span class="right floated">
+          <div class="ui vertical animated button basic btn_remove" data-itemid="item_itemId">
+            <div class="hidden content">Remove</div>
+            <div class="visible content">
+              <i class="trash icon"></i>
+            </div>
+          </div>
+        </span>
+        <span class="left floated">
+          <div class="inline field">
+            <label>Qty</label>
+            <input class="unit_price" type="hidden" value="item_unitPrice" />
+            <select class="ui search dropdown item_qty" id="item_itemId">
+              item_qtyDropDown
+            </select>
+          </div>
+        </span>
+      </div>
+    </div>
+  </script>
+
+</body>
+
+<script src="https://s3.amazonaws.com/lambda-statics-us/wcbot/js/shoppingCart.js"></script>
+{% endblock %}

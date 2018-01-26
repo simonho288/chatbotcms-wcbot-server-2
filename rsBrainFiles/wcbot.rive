@@ -1,0 +1,55 @@
+! version = 2.0
+
+/*
+Rivescript brain file for cms_wc
+*/
+
+// Variables
+! var fb_page_id = none
+
+// A pre-defined message will be handled in cms_wc.js
++ woocommerce_quickhelp
+- _jsShowQuickHelp_
+
++ woocommerce_get_hotproducts
+- _jsListHotProducts_
+
++ woocommerce_get_products
+- _jsListProducts_
+
++ woocommerce_get_categories
+- _jsListCategories_
+
++ woocommerce_view_cart
+- _jsViewCart_
+
++ woocommerce_clear_cart
+- _jsClearCart_
+
++ woocommerce_list_all_orders
+- _jsListAllOrders_
+
+// All its redirect
++ [*] help
+@ woocommerce_quickhelp
+
++ [*] hot products
+@ woocommerce_get_hotproducts
+
++ [*] products
+@ woocommerce_get_products
+
++ [*] (category|categories)
+@ woocommerce_get_categories
+
++ clear cart
+@ woocommerce_clear_cart
+
++ [*] cart
+@ woocommerce_view_cart
+
++ (search|find) (items|products) *
+- <call>find_products <star3></call>
+
++ * (my|all) orders
+@ woocommerce_list_all_orders

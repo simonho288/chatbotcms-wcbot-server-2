@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <h1 class="ui center aligned header">Payment Success</h1>
+  <h3 class="ui center aligned header">Thank You for your purchase</h3>
+  <div class="ui container">
+    <div class="ui segments">
+      <div class="ui segment">
+        paymentId = {{ paymentId }
+      </div>
+    </div>
+    <button class="ui primary button" id="btn_close">Close this Browser</button>
+  </div>
+</body>
+<script>
+  $('#btn_close').on('click', function(evt) {
+    window.open('', '_self').close()
+  })
+</script>
+{% endblock %}

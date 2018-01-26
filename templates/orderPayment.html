@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <script>
+    //- Pass the cart items from server template to frontend
+    //- window.cartItemsStr="#{escape(JSON.stringify(items))}"
+    //- window.paypalAccount="#{paypalAccount}"
+    //- window.paypalMode="#{paypalMode}"
+    window._userId = "{{ userId }}"
+    window._recipientId = "{{ recipientId }}"
+    window._orderId = "{{ orderId }}"
+    window._stripePublishKey = "{{ stripePublishKey }}"
+    window._braintreeClientToken = "{{ braintreeClientToken }}"
+    window._shoppingCart = util.decodeJSON("{{ shopcart }}")
+    window._wcOrder = util.decodeJSON("{{ wcorder }}")
+    window._wcPaymentGateways = util.decodeJSON("{{ wcpaygates }}")
+    //- window.amount="#{amount}"
+  </script>
+
+  <div class="ui main container">
+    <h3>Payment</h3>
+  </div>
+
+  <div class="ui main container">
+    <div class="ui four top attached ordered steps">
+      <div class="completed step">
+        <div class="content">
+          <div class="title">Info Input</div>
+          <div class="description">Order info</div>
+        </div>
+      </div>
+      <div class="completed step">
+        <div class="content">
+          <div class="title">Shipping</div>
+          <div class="description">Shipping option</div>
+        </div>
+      </div>
+      <div class="completed step">
+        <div class="content">
+          <div class="title">Review</div>
+          <div class="description">Confirm order</div>
+        </div>
+      </div>
+      <div class="active step">
+        <i class="payment icon"></i>
+        <div class="content">
+          <div class="title">Payment</div>
+          <div class="description">Select payment</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ui main container">
+    <div class="ui segment loading_wrapper" style="min-height: 500px;">
+      <div class="ui active inverted dimmer">
+        <div class="ui text loader">Loading</div>
+      </div>
+      <p></p>
+    </div>
+    <div class="ui segment loaded_wrapper" style="display: none">
+      <h2>Total Amount: <span id="total_amount"></span></h2>
+      <div class="ui blue basic ribbon label">Payment Method</div>
+      <p></p>
+      <p>Please select payment method</p>
+      <div class="ui styled accordion" id="payment_methods"></div>
+    </div>
+  </div>
+
+  <div class="ui main container">
+    <button class="ui button" id="btn_back">Cancel This Order</button>
+  </div>
+
+  <div class="footer"></div>
+
+  <div class="ui modal" id="dlg_discardwarn">
+    <i class="close icon"></i>
+    <div class="header"><i class="warning sign icon"></i>Warning</div>
+    <div class="image content">
+      <div class="description">Are you sure to cancel this order?</div>
+    </div>
+    <div class="actions">
+      <div class="ui negative basic button" id="btn_ok">Yes</div>
+      <div class="ui button" id="btn_cancel">No</div>
+    </div>
+  </div>
+
+  <div id="hot_form_div" style="display: none"></div>
+</body>
+
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script src="https://js.braintreegateway.com/web/dropin/1.8.0/js/dropin.min.js"></script>
+<script src="https://s3.amazonaws.com/lambda-statics-us/wcbot/js/orderPayment.js"></script>
+{% endblock %}

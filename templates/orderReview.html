@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <script>
+    //- Pass the cart items from server template to frontend
+    window._userId = "{{ userId }}"
+    window._recipientId = "{{ recipientId }}"
+    window._wcOrder = util.decodeJSON("{{ wcorder }}")
+    window._shoppingCart = util.decodeJSON("{{ shopcart }}")
+    window._orderId = "{{ orderId }}"
+  </script>
+
+  <div class="ui main container">
+    <h3>Order Review</h3>
+  </div>
+
+  <div class="ui main container">
+    <div class="ui four top attached ordered steps">
+      <div class="completed step">
+        <div class="content">
+          <div class="title">Info Input</div>
+          <div class="description">Order info</div>
+        </div>
+      </div>
+      <div class="completed step">
+        <div class="content">
+          <div class="title">Shipping</div>
+          <div class="description">Shipping option</div>
+        </div>
+      </div>
+      <div class="active step">
+        <i class="list layout icon"></i>
+        <div class="content">
+          <div class="title">Review</div>
+          <div class="description">Confirm order</div>
+        </div>
+      </div>
+      <div class="step">
+        <i class="payment icon"></i>
+        <div class="content">
+          <div class="title">Payment</div>
+          <div class="description">Select payment</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ui main container">
+    <div class="ui segment loading_wrapper" style="min-height: 500px;">
+      <div class="ui active inverted dimmer">
+        <div class="ui text loader">Loading</div>
+      </div>
+      <p></p>
+    </div>
+    <div class="loaded_wrapper" style="display: none">
+      <div class="ui main container">
+        <table class="ui unstackable table" id="table_items">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Item</th>
+              <th style="text-align: right">Qty</th>
+              <th style="text-align: right">Price</th>
+              <th style="text-align: right">Tax</th>
+              <th style="text-align: right">Sub-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ui main container">
+        <table class="ui definition table">
+          <tbody>
+            <tr>
+              <td class="four wide column">Order total</td>
+              <td id="order_total"></td>
+            </tr>
+            <tr>
+              <td>Order tax</td>
+              <td id="order_tax"></td>
+            </tr>
+            <tr>
+              <td>Shipping total</td>
+              <td id="ship_total"></td>
+            </tr>
+            <tr>
+              <td>Shipping tax</td>
+              <td id="ship_tax"></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Total Amount: <span id="total_amount"></span></h3>
+      </div>
+
+      <div class="ui main container">
+        <button class="ui primary button" id="btn_proceed">Proceed To Payment</button>
+        <button class="ui button" id="btn_back">Cancel This Order</button>
+      </div>
+
+      <div class="footer"></div>
+
+      <div class="ui modal" id="dlg_discardwarn">
+        <i class="close icon"></i>
+        <header><i class="warning sign icon"></i>Warning</header>
+        <div class="image content">
+          <div class="description">Are you sure to cancel this order?</div>
+        </div>
+        <div class="actions">
+          <div class="ui negative basic button" id="btn_ok">Yes</div>
+          <div class="ui button" id="btn_cancel">No</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script src="https://s3.amazonaws.com/lambda-statics-us/wcbot/js/orderReview.js"></script>
+{% endblock %}

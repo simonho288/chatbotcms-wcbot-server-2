@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <h1 class="ui center aligned header">Payment Cancelled</h1>
+  <div class="ui container">
+    <div class="ui negative message">
+      <div class="header">
+        Payment Id: {{ paymentId }}
+      </div>
+      <p>
+        Payment gateway return failure signal
+      </p>
+    </div>
+    <button class="ui primary button" id="btn_close">Close this Browser</button>
+  </div>
+</body>
+<script>
+  $('#btn_close').on('click', function(evt) {
+    window.open('', '_self').close()
+  })
+</script>
+{% endblock %}

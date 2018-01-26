@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+{% block body %}
+<body>
+  <script>
+    window._paymentTxn = util.decodeJSON("{{ paymenttxn }}")
+    window._shoppingCart = util.decodeJSON("{{ shopcart }}")
+    window._wcOrder = util.decodeJSON("{{ wcorder }}")
+  </script>
+
+  <div class="ui main container">
+    <h3>Order Received</h3>
+    <h4>Thank You for your purchase</h4>
+  </div>
+
+  <div class="ui segment loading_wrapper" style="min-height: 500px;">
+    <div class="ui active inverted dimmer">
+      <div class="ui text loader">Loading</div>
+    </div>
+    <p></p>
+  </div>
+  <div class="loaded_wrapper" style="display: none">
+    <div class="ui main container">
+      <div class="ui celled big list">
+        <div class="item">
+          <div class="content">
+            <div class="header">Order Number</div>
+            <div class="span" id="order_no"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Date</div>
+            <div class="span" id="order_date"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Total</div>
+            <div class="span" id="order_total"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Payment Method</div>
+            <div class="span" id="payment_method"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Subtotal</div>
+            <div class="span" id="order_subtotal"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Shipping</div>
+            <div class="span" id="order_shipping"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Tax</div>
+            <div class="span" id="order_tax"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Payment ID</div>
+            <div class="span" id="payment_id"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <div class="header">Total</div>
+            <div class="span" id="order_total2"></div>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Now you can close the browser or <a href="" id="btn_close">click here to close</a>
+      </p>
+    </div>
+  </div>
+</body>
+
+<script>
+  $('#btn_close').on('click', function(evt) {
+    window.open('', '_self').close()
+  })
+</script>
+
+<script src="https://s3.amazonaws.com/lambda-statics-us/wcbot/js/orderReceived.js"></script>
+{% endblock %}
