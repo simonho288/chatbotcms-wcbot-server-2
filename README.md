@@ -22,7 +22,7 @@ If you want to modify the WcBot server, you'll need:
 
 This is whole new version of ChatbotCMS - WcBot server. The different of new version has two milestones.
 
-1. All server codes are re-written in Python (version 3): Why choose Python? The answer is faster prototyping from idea. As the WcBot codes result, it reduced 49% line of codes. All asynchronous codes are eliminated. It means the logic is easily to understand, modify and upgrade.
+1. All server codes are re-written in Python (version 3): Why choose Python? The answer is faster prototyping from idea. As the WcBot codes result, it reduced 49% line of codes. All asynchronous codes are eliminated. It means the logic is easier to understand, modify and upgrade.
 
 2. WcBot server goes serverless (AWS Lambda): One immense benefit of a serverless infrastructure is that it improves economy of scale of operations. Now we don't need to worry about servers down, setup cluster servers, server loading suddenly raise, install server patches, setup load-balance/firewalls..
 
@@ -216,13 +216,13 @@ If you want to modify the WcBot server codes, you may thinking how to run the Wc
 Before starting the server, make sure the necessary variables are assigned. The commands should like this:
 
 ```bash
-FLASK_APP="server.py"
-FLASK_DEBUG=0
-DEBUG_MODE=1
-AMZACCESSKEY=[YOUR_ACCESS_KEY]
-AMZACCESSSECRET=[YOUR_ACCESS_KEY_SECRET]
-AMZREGION=[YOUR_AWS_REGION]
-AMZBUCKET=[YOUR_S3_BUCKET_NAME]
+export FLASK_APP="server.py"
+export FLASK_DEBUG=0
+export DEBUG_MODE=1
+export AMZACCESSKEY=[YOUR_ACCESS_KEY]
+export AMZACCESSSECRET=[YOUR_ACCESS_KEY_SECRET]
+export AMZREGION=[YOUR_AWS_REGION]
+export AMZBUCKET=[YOUR_S3_BUCKET_NAME]
 npm start
 ```
 
@@ -258,25 +258,25 @@ You should test the server is operating correctly before Messenger conversion. R
 
 Test the Flask is running (server general test):
 ```bash
-curl https://[your ngrok reports URL]/
+curl https://[your ngrok HTTPS URL]/
 WcBot is running
 ```
 
 Server ping test (simulate ping test from WcBot plugin):
 ```bash
-curl https://[your ngrok reports URL]/ping?q=chatbotcms-wcbot
+curl https://[your ngrok HTTPS URL]/ping?q=chatbotcms-wcbot
 pong
 ```
 
 Database connection test:
 ```bash
-curl https://[your ngrok reports URL]/test_db?q=chatbotcms-wcbot
+curl https://[your ngrok HTTPS URL]/test_db?q=chatbotcms-wcbot
 Database connection okay.
 ```
 
 WooCommerce connection test:
 ```bash
-curl https://[your ngrok reports URL]/test_wc?subscribe_vk=[your subscription verify token]
+curl https://[your ngrok HTTPS URL]/test_wc?subscribe_vk=[your subscription verify token]
 WooCommerce connection with 'https://wcbotdemo.com' okay.
 ```
 *IMPORTANT*: To obtain the subscription verify token, you'll need to install WcBot plugin in your Wordpress. Please refer to [this doc](https://chatbotcms.com/docs/wcbot/install/) for the installation processes.
@@ -308,7 +308,7 @@ WcBot has built-in shopping cart mini site. It allows customers to view cart, in
 - JS files are located in `/shopping-cart-src` directory.
 - Static files are located in `/static` directory.
 
-#### Build & deploy the shopping cart  website
+#### Build & deploy the shopping cart website
 
 The shopping cart building processes is to minify the source codes and copy to the destination directory `/shopping-cart/`. It uses Gulp to build. There has two main tasks defined in `gulpfile.js`:
 
