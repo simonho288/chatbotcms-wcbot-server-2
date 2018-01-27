@@ -15,7 +15,7 @@ import mod_woocommerce
 import mod_payment
 import mod_global
 
-from flask import Flask, make_response, Response, request, jsonify, render_template, send_from_directory
+from flask import Flask, make_response, Response, request, jsonify, render_template, send_from_directory, redirect
 from inspect import currentframe, getframeinfo
 
 logger = mod_misc.initLogger(__name__)
@@ -133,6 +133,24 @@ def webServices(name):
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
   cart_ws = mod_webservices.Shopcart()
   return cart_ws.handleService(name, request)
+
+@app.route("/authenticate_wc", methods=["GET"])
+def authenticate_wc():
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  mod_global.server_entry(request)
+  params = request.args
+  redirect_url = mod_woocommerce.handleAuthenicate(params)
+  return redirect(redirect_url, 305)
+
+@app.route("/authenticate_wc_callback", methods=["POST"])
+def authenticate_wc_callback():
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  mod_global.server_entry(request)
+  params = request.form
+  if request.is_json:
+    params = request.json
+  if mod_woocommerce.handleAuthenicateCallback(params):
+    return make_response("")
 
 # Payment return
 @app.route("/payment_return", methods=["GET"])

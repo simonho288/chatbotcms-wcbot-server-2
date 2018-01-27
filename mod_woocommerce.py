@@ -5,8 +5,10 @@ import logging
 import json
 import inspect
 import traceback
+import re
 
 import mod_misc
+import mod_database
 
 from requests.auth import HTTPBasicAuth
 from requests.utils import quote
@@ -264,3 +266,40 @@ class Wc:
     except Exception as exp:
       logger.error(traceback.format_exc())
       raise exp
+
+def handleAuthenicate(params):
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  print("SERVER_URL")
+  print(SERVER_URL)
+  this_host = "https://" + SERVER_URL
+  store_url = param["wp_host"]
+  endpoint = "/wc-auth/v1/authorize"
+  params = {
+    "app_name": param["app_name"],
+    "scope": "read_write",
+    "user_id": param["_id"],
+    "return_url": param["wp_return_url"],
+    "callback_url": this_host + "/authenticate_wc_callback" # wc requires HTTPS
+  }
+  query_string = json.dumps(params)
+  query_string = re.sub(r"%20", "+", query_string)
+  auth_url = store_url + endpoint + '?' + query_string
+  return auth_url
+
+def handleAuthenicateCallback(params):
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  assert isinstance(params["user_id"], str)
+  assert isinstance(params["consumer_key"], str)
+  assert isinstance(params["consumer_secret"], str)
+  fb_page_id = params["user_id"]
+  m_db = mod_database.Mdb()
+  client_rec = m_db.findClientByFbPageId(fb_page_id)
+  client_id = client_rec["client_id"]
+  update_props = [{
+    "key": "woocommerce.consumer_key",
+    "value": params["consumer_key"]
+  }, {
+    "key": "woocommerce.consumer_secret",
+    "value": params["consumer_secret"]
+  }]
+  return m_db.updateClientProperty(client_id, update_props)

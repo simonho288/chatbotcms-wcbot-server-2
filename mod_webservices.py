@@ -45,6 +45,10 @@ class Shopcart:
       return self.doDeleteOrder(request)
     elif name == "checkout_submit":
       return self.doCheckoutSubmit(request)
+    elif name == "db_loadclient":
+      return self.doLoadClient(request)
+    elif name == "db_upsertclient":
+      return self.doUpsertClient(request)
     else:
       raise Exception("Unhandled service: " + name)
 
@@ -58,6 +62,36 @@ class Shopcart:
     # if result is not None:
     #   record = result["record"]
     #   return jsonify(record)
+
+  def doLoadClient(self, request):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(request.args["_id"], str)
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientByVerifyToken(request.args["_id"])
+    resp = make_response(jsonify(client_rec), 200)
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
+    return resp
+
+  def doUpsertClient(self, request):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    client_obj = request.form
+    assert isinstance(client_obj["_id"], str)
+    assert isinstance(client_obj["client_email"], str)
+    assert isinstance(client_obj["fb_page_id"], str)
+    assert isinstance(client_obj["plugin_type"], str)
+    assert isinstance(client_obj["shop_type"], str)
+    assert isinstance(client_obj["subscribe_date"], str)
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientByFbPageId(client_obj["fb_page_id"])
+    if client_rec is not None:
+      # Remove existing client record if exists
+      m_db.deleteClientById(client_rec["client_id"])
+    m_db.insertClient(client_rec)
+    resp = make_response(jsonify({"status": True}), 200)
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
+    return resp
 
   def doSaveCart(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -165,5 +199,3 @@ class Shopcart:
       return m_payment.doPaymentCod(rec_id, total, currency, gateway_sts)
     else:
       raise Exception("Unhandled payment_method: " + payment_method)
-
-

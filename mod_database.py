@@ -194,7 +194,7 @@ def __convertTable_Clients():
     }
     dclient.put_item(TableName=DYNAMO_COLL_CLIENTS, Item=doc)
 
-class Mdb: # MongoDB
+class Mdb:
   def __init__(self):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
 
@@ -208,6 +208,7 @@ class Mdb: # MongoDB
     items = response["Items"]
     return len(items)
 
+  # verify_token is client_id
   def findClientByVerifyToken(self, ver_tok):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(ver_tok, str)
@@ -236,6 +237,36 @@ class Mdb: # MongoDB
       }
     )
     assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+   
+  def updateClientProperty(self, client_id, props):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(client_id, str)
+    assert props is not None
+    table = dynamodb.Table(DYNAMO_COLL_CLIENTS)
+    update_exp = "set "
+    values = {}
+    i = 1
+    for prop in props:
+      assert prop["key"] is not None
+      assert prop["value"] is not None
+      arg_name = ":r" + str(i)
+      update_exp += prop["key"] + "=" + arg_name + ", "
+      values[arg_name] = prop["value"]
+      i = i + 1
+    update_exp = update_exp[:len(update_exp) - 2] # remove last ", "
+    print("client_id: " + client_id)
+    print("update_exp:")
+    print(update_exp)
+    print("values:")
+    print(values)
+    resp = table.update_item(
+      Key = { "client_id": id },
+      UpdateExpression = update_exp,
+      ExpressionAttributeValues = values,
+      ReturnValues = "UPDATED_NEW"
+    )
+    assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+    return True
 
   def findClientByFbPageId(self, fb_page_id):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -251,6 +282,27 @@ class Mdb: # MongoDB
       obj = resp["Items"][0]
       return djson.loads(obj)
     return None
+
+  def insertClient(self, rec):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert rec is not None
+    table = dynamodb.Table(DYNAMO_COLL_CLIENTS)
+    resp = table.put_item(
+      Item = rec
+    )
+    assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200
+    return True
+
+  def deleteClientById(self, id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(id, str)
+    table = dynamodb.Table(DYNAMO_COLL_CLIENTS)
+    resp = table.delete_item(
+      Key = {
+        "client_id": id
+      }
+    )
+    assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200
 
   def findRsUserVarsByUserAndPage(self, user_id, fb_page_id):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
