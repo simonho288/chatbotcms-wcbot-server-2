@@ -45,7 +45,7 @@ Suppose you're using Linux or Mac OS, do below steps:
 - Install [NodeJS](https://nodejs.org/en/) version 6 or above
 - Install [AWS command line interface](https://aws.amazon.com/cn/cli/)
 - Install [serverless framework](https://serverless.com/)
-- Install Python 3 virtual environment ((virtualenv)[https://help.dreamhost.com/hc/en-us/articles/115000695551-Installing-and-using-Python-s-virtualenv-using-Python-3])
+- Install Python 3 virtual environment: (virtualenv)[https://help.dreamhost.com/hc/en-us/articles/115000695551-Installing-and-using-Python-s-virtualenv-using-Python-3]
 
 #### 2. Create a new AWS IAM user
 
