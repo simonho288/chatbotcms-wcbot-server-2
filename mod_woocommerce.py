@@ -294,12 +294,7 @@ def handleAuthenicateCallback(params):
   fb_page_id = params["user_id"]
   m_db = mod_database.Mdb()
   client_rec = m_db.findClientByFbPageId(fb_page_id)
+  client_rec["woocommerce"]["consumer_key"] = params["consumer_key"]
+  client_rec["woocommerce"]["consumer_secret"] = params["consumer_secret"]
   client_id = client_rec["client_id"]
-  update_props = [{
-    "key": "woocommerce.consumer_key",
-    "value": params["consumer_key"]
-  }, {
-    "key": "woocommerce.consumer_secret",
-    "value": params["consumer_secret"]
-  }]
-  return m_db.updateClientProperty(client_id, update_props)
+  return m_db.replaceClientRecord(client_id, client_rec)

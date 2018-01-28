@@ -208,19 +208,21 @@ class Mdb:
     items = response["Items"]
     return len(items)
 
-  # verify_token is client_id
-  def findClientByVerifyToken(self, ver_tok):
+  def findClientById(self, client_id):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-    assert isinstance(ver_tok, str)
+    assert isinstance(client_id, str)
     table = dynamodb.Table(DYNAMO_COLL_CLIENTS)
     resp = table.get_item(
       Key = {
-        "client_id": ver_tok
+        "client_id": client_id
       }
     )
     if not "Item" in resp:
       return None
     return resp["Item"]
+  def findClientByVerifyToken(self, ver_tok):
+    # verify_token is client_id
+    return self.findClientById(ver_tok)
 
   def updateClientSubscribeDate(self, client_id, dtime):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -238,32 +240,16 @@ class Mdb:
     )
     assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200
    
-  def updateClientProperty(self, client_id, props):
+  def replaceClientRecord(self, client_id, rec):
+    """
+    Replace whole client record by id (key)
+    """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(client_id, str)
-    assert props is not None
+    assert rec is not None
     table = dynamodb.Table(DYNAMO_COLL_CLIENTS)
-    update_exp = "set "
-    values = {}
-    i = 1
-    for prop in props:
-      assert prop["key"] is not None
-      assert prop["value"] is not None
-      arg_name = ":r" + str(i)
-      update_exp += prop["key"] + "=" + arg_name + ", "
-      values[arg_name] = prop["value"]
-      i = i + 1
-    update_exp = update_exp[:len(update_exp) - 2] # remove last ", "
-    print("client_id: " + client_id)
-    print("update_exp:")
-    print(update_exp)
-    print("values:")
-    print(values)
-    resp = table.update_item(
-      Key = { "client_id": id },
-      UpdateExpression = update_exp,
-      ExpressionAttributeValues = values,
-      ReturnValues = "UPDATED_NEW"
+    resp = table.put_item(
+      Item = rec
     )
     assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200
     return True

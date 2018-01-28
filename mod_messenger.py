@@ -228,4 +228,34 @@ def getMessengerWhitelistedDomain(access_token):
     "fields": "whitelisted_domains"
   }
   result = requests.get(FBSRV_URL + "me/messenger_profile", params=param)
-  return result.json()
+  return result.json()["data"][0]["whitelisted_domains"]
+
+def setMessengerProfile(access_token, profile):
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  assert isinstance(access_token, str)
+  assert profile is not None
+  qs = "access_token=" + access_token
+  url = FBSRV_URL + "me/messenger_profile?" + qs
+  return _checkApiError(requests.post(url, json=profile))
+
+def setupWhiteListDomains(access_token, domains):
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  assert isinstance(access_token, str)
+  assert isinstance(domains, list)
+  new_domains = []
+  for domain in domains:
+    if "localhost" not in domain and "127.0." not in domain:
+      if not domain.endswith('/'):
+        domain += '/'
+      new_domains.append(domain)
+  if len(new_domains) > 0:
+    # Append existing domains
+    exist_domains = getMessengerWhitelistedDomain(access_token)
+    for domain in exist_domains:
+      if domain not in new_domains:
+        new_domains.append(domain)
+    profile = {
+      "whitelisted_domains": new_domains
+    }
+    setMessengerProfile(access_token, profile)
+  return True

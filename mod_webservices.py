@@ -49,6 +49,8 @@ class Shopcart:
       return self.doLoadClient(request)
     elif name == "db_upsertclient":
       return self.doUpsertClient(request)
+    elif name == "init_msgr_profile":
+      return self.doInitMsgrProfile(request)
     else:
       raise Exception("Unhandled service: " + name)
 
@@ -67,7 +69,11 @@ class Shopcart:
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(request.args["_id"], str)
     m_db = mod_database.Mdb()
+    print("_id:")
+    print(request.args["_id"])
     client_rec = m_db.findClientByVerifyToken(request.args["_id"])
+    print("client_rec:")
+    print(client_rec)
     resp = make_response(jsonify(client_rec), 200)
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
@@ -75,19 +81,49 @@ class Shopcart:
 
   def doUpsertClient(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-    client_obj = request.form
-    assert isinstance(client_obj["_id"], str)
-    assert isinstance(client_obj["client_email"], str)
-    assert isinstance(client_obj["fb_page_id"], str)
-    assert isinstance(client_obj["plugin_type"], str)
-    assert isinstance(client_obj["shop_type"], str)
-    assert isinstance(client_obj["subscribe_date"], str)
+    form_data = request.form.to_dict()
+    assert isinstance(form_data["_id"], str)
+    assert isinstance(form_data["app_name"], str)
+    assert isinstance(form_data["form_action"], str)
+    assert isinstance(form_data["client_email"], str)
+    assert isinstance(form_data["fb_page_id"], str)
+    assert isinstance(form_data["fb_page_acctok"], str)
+    assert isinstance(form_data["woocommerce_url"], str)
+    assert isinstance(form_data["woocommerce_consumer_key"], str)
+    assert isinstance(form_data["woocommerce_consumer_secret"], str)
+    assert isinstance(form_data["woocommerce_site_name"], str)
+    assert isinstance(form_data["version"], str)
+    assert isinstance(form_data["plugin_type"], str)
+    assert isinstance(form_data["shop_type"], str)
+    new_clientrec = {
+      "created_at": int(round(time.time() * 1000)),
+      "client_id": form_data["_id"],
+      "app_name": form_data["app_name"],
+      "client_email": form_data["client_email"],
+      "fb_page_id": form_data["fb_page_id"],
+      "facebook_page": {
+        "access_token": form_data["fb_page_acctok"]
+      },
+      "plugin_type": form_data["plugin_type"],
+      "shop_type": form_data["shop_type"],
+      "woocommerce": {
+        "url": form_data["woocommerce_url"],
+        "consumer_key": form_data["woocommerce_consumer_key"],
+        "consumer_secret": form_data["woocommerce_consumer_secret"],
+        "site_name": form_data["woocommerce_site_name"]
+      },
+      "version": form_data["version"]
+    }
+    if form_data["form_action"] == "create":
+      new_clientrec["subscribe_date"] = form_data["subscribe_date"]
+      new_clientrec["woocommerce"]["consumer_key"] = "-"
+      new_clientrec["woocommerce"]["consumer_secret"] = "-"
     m_db = mod_database.Mdb()
-    client_rec = m_db.findClientByFbPageId(client_obj["fb_page_id"])
-    if client_rec is not None:
+    old_clientrec = m_db.findClientByFbPageId(form_data["fb_page_id"])
+    if old_clientrec is not None:
       # Remove existing client record if exists
-      m_db.deleteClientById(client_rec["client_id"])
-    m_db.insertClient(client_rec)
+      m_db.deleteClientById(old_clientrec["client_id"])
+    m_db.insertClient(new_clientrec)
     resp = make_response(jsonify({"status": True}), 200)
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
@@ -199,3 +235,24 @@ class Shopcart:
       return m_payment.doPaymentCod(rec_id, total, currency, gateway_sts)
     else:
       raise Exception("Unhandled payment_method: " + payment_method)
+
+  def doInitMsgrProfile(self, request):
+    """
+    Setup Messenger Platform. Usually called by plugin. Ref:
+    https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api
+    To see current whitelisted domains. Check out the curl command in README.md
+    """
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    post_data = request.form.to_dict()
+    client_id = post_data["clientId"]
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientById(client_id)
+    if "domain" in post_data:
+      domain = post_data["domain"]
+      access_token = client_rec["facebook_page"]["access_token"]
+      mod_messenger.setupWhiteListDomains(access_token, [domain])
+    resp = make_response("ok", 200)
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
+    return resp
+
