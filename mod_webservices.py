@@ -72,8 +72,6 @@ class Shopcart:
     print("_id:")
     print(request.args["_id"])
     client_rec = m_db.findClientByVerifyToken(request.args["_id"])
-    print("client_rec:")
-    print(client_rec)
     resp = make_response(jsonify(client_rec), 200)
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"

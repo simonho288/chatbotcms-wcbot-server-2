@@ -397,6 +397,8 @@ class WcBot:
     m_shopcart.loadFromDatabase()
     m_shopcart.appendProduct(product)
     m_shopcart.saveToDatabase()
+    shopcart_url = mod_global.SERVER_URL
+    if not shopcart_url.endswith("/"): shopcart_url += "/"
     btns = [{
       "title": "View Cart",
       "type": "postback",
@@ -404,7 +406,7 @@ class WcBot:
     }, {
       "title": "Check Out",
       "type": "web_url",
-      "url": mod_global.SERVER_URL + "/mwp?page=shopCart&uid={0}&rid={1}".format(user_id, client_rec["fb_page_id"])
+      "url": shopcart_url + "mwp?page=shopCart&uid={0}&rid={1}".format(user_id, client_rec["fb_page_id"])
     }]
     out_msg = "Item added to shopping card."
     mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, btns)

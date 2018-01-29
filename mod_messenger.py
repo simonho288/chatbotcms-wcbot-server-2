@@ -228,7 +228,15 @@ def getMessengerWhitelistedDomain(access_token):
     "fields": "whitelisted_domains"
   }
   result = requests.get(FBSRV_URL + "me/messenger_profile", params=param)
-  return result.json()["data"][0]["whitelisted_domains"]
+  result = result.json()["data"]
+  print("result:")
+  print(result)
+  if len(result) == 0:
+    return []
+  elif "whitelisted_domains" in result[0]:
+    return result[0]["whitelisted_domains"]
+  else:
+    return []
 
 def setMessengerProfile(access_token, profile):
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -254,6 +262,8 @@ def setupWhiteListDomains(access_token, domains):
     for domain in exist_domains:
       if domain not in new_domains:
         new_domains.append(domain)
+    # print("final new_domains:")
+    # print(new_domains)
     profile = {
       "whitelisted_domains": new_domains
     }
