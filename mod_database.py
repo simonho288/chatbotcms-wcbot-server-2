@@ -585,17 +585,18 @@ class Mdb:
       return None
     return resp["Item"]
 
-  def setPaymentCancelled(self, payment_id):
+  def replacePaymentRecord(self, payment_id, doc):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(payment_id, str)
+    assert doc is not None
     table = dynamodb.Table(DYNAMO_COLL_PAYMENT_TXN)
     resp = table.update_item(
       Key = {
         "id": payment_id
       },
-      UpdateExpression = "set doc.status = :f",
+      UpdateExpression = "set doc = :r",
       ExpressionAttributeValues = {
-        ":f": "cancelled"
+        ":r": doc
       }
     )
     assert resp["ResponseMetadata"]["HTTPStatusCode"] == 200

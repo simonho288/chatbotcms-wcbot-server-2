@@ -38,13 +38,17 @@ class Paygate(object):
 
   def initBraintree(self):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    if self.gw_braintree is None:
+      return False
     mode = braintree.Environment.Production
-    if self.gw_braintree["isSandbox"]: mode = braintree.Environment.Sandbox
+    if self.gw_braintree["isSandbox"]:
+      mode = braintree.Environment.Sandbox
     braintree.Configuration.configure(mode,
       self.gw_braintree["merchantId"],
       self.gw_braintree["publicKey"],
       self.gw_braintree["secretKey"]
     )
+    return True
 
   def getRawPaymentGateways(self):
     """
@@ -100,7 +104,8 @@ class Paygate(object):
 
   def createBraintreeClientToken(self):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-    self.initBraintree()
+    if not self.initBraintree():
+      return None
     mode = "Production"
     if self.gw_braintree["isSandbox"]: mode = "Sandbox"
     return {
@@ -201,6 +206,7 @@ class Paygate(object):
     assert isinstance(gateway_sts["api_signature"]["value"], str)
     assert isinstance(gateway_sts["email"]["value"], str)
     assert isinstance(gateway_sts["testmode"]["value"], str)
+    print("mod_global.SERVER_URL=" + mod_global.SERVER_URL)
     # Pre-save a payment to database
     api_username = gateway_sts["api_username"]["value"]
     api_password = gateway_sts["api_password"]["value"]
@@ -525,8 +531,9 @@ class Paygate(object):
     assert request is not None
     m_db = mod_database.Mdb()
     payment_id = request.values["pid"]
-    payment_rec = m_db.findPaymentTxnById(payment_id)["record"]
-    m_db.setPaymentCancelled(payment_id)
+    payment_rec = m_db.findPaymentTxnById(payment_id)["doc"]
+    payment_rec["status"] = "cancelled" # mark the status to cancelled
+    m_db.replacePaymentRecord(payment_id, payment_rec)
     return payment_rec # return payment_rec but it is deleted
 
   def updateOrderPool(self, is_paid, m_db, orderpool_id, payment_id, payment_rec):

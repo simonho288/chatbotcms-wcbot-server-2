@@ -535,6 +535,9 @@ function SetupBraintreeCheckout() {
   var form = document.querySelector('#braintree-payment-form');
   var token = window._braintreeClientToken;
 
+  if (token == '')
+    return
+
   braintree.dropin.create({
     authorization: token,
     container: '#bt-dropin',

@@ -34,7 +34,7 @@ function RenderItemsIntoTable() {
   var orderTax = 0
   var crySts = window._shoppingCart.server_settings.currency
 
-  for (var i = 0, len = window._wcOrder.line_items.length; i < len; ++i) {
+  for (var i = 0; i < window._wcOrder.line_items.length; i++) {
     var orderItem = window._wcOrder.line_items[i]
     orderItem.subtotal = parseFloat(orderItem.subtotal)
     orderItem.subtotal_tax = parseFloat(orderItem.subtotal_tax)
@@ -42,13 +42,14 @@ function RenderItemsIntoTable() {
     orderItem.total_tax = parseFloat(orderItem.total_tax)
 
     var item = null
-    for (var j = 0, len2 = window._shoppingCart.cart_items.length; j < len2; ++j) {
+    for (var j = 0; j < window._shoppingCart.cart_items.length; j++) {
       var ci = window._shoppingCart.cart_items[j]
       if (ci.product_id == orderItem.product_id) {
         item = ci
         break
       }
     }
+    console.assert(item != null)
     item.qty = parseFloat(item.qty)
     item.unit_price = parseFloat(item.unit_price)
 

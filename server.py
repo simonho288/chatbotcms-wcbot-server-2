@@ -131,6 +131,7 @@ def makeWebPage():
 @app.route("/ws/<name>", methods=["GET", "POST", "PUT", "DELETE"])
 def webServices(name):
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  mod_global.server_entry(request, remove_path="/ws")
   cart_ws = mod_webservices.Shopcart()
   return cart_ws.handleService(name, request)
 
@@ -156,6 +157,7 @@ def authenticate_wc_callback():
 @app.route("/payment_return", methods=["GET"])
 def paymentReturn():
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  mod_global.server_entry(request)
   m_pg = mod_payment.Paygate()
   result = m_pg.handleReturn(request)
   m_mwp = mod_makewebpage.Mwp()
@@ -164,6 +166,7 @@ def paymentReturn():
 @app.route("/payment_cancel", methods=["GET"])
 def paymentCancel():
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  mod_global.server_entry(request)
   m_pg = mod_payment.Paygate()
   payment_rec = m_pg.handleCancel(request)
   m_mwp = mod_makewebpage.Mwp()

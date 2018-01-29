@@ -354,13 +354,13 @@ function SaveCart() {
 
   // But need to save 'ship_info'
   var $select = $('[name="ship_method"]')
+  console.assert($select.find(':selected').data('cost') != null)
+  console.assert($select.val() != null)
   window._shoppingCart.ship_info = {
     wc_order_id: window._wcOrder.id.toString(),
     method: $select.val(),
-    cost: $select.find(':selected').data('cost')
+    cost: $select.find(':selected').data('cost').toString()
   }
-  console.assert(window._shoppingCart.ship_info.method != null)
-  console.assert(window._shoppingCart.ship_info.cost != null)
 
   return $.ajax({
     type: 'POST',

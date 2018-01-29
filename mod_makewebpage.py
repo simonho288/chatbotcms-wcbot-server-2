@@ -256,9 +256,14 @@ class Mwp:
     wcpaygates = m_pg.getRawPaymentGateways() # Get processed of all gateways
     wcpaygates = mod_misc.delKeysInDict(wcpaygates, ["tip", "_links", "method_description", "method_title", "label"])
     wcpaygates_str = mod_misc.dictToJsonStr(wcpaygates)
-    btrst = m_pg.createBraintreeClientToken()
+    braintree_rst = m_pg.createBraintreeClientToken()
+    braintree_mode = ""
+    braintree_token = ""
+    if braintree_rst is not None:
+      braintree_mode = braintree_rst["mode"]
+      braintree_token = braintree_rst["clientToken"]
     stripkey = m_pg.getStripePublishKey()
-    return render_template("orderPayment.html", userId=user_id, recipientId=fb_page_id, orderId=order_id, stripePublishKey=stripkey, braintreeClientToken=btrst["clientToken"], braintreeMode=btrst["mode"], shopcart=cart_str, wcorder=wcorder_str, wcpaygates=wcpaygates_str)
+    return render_template("orderPayment.html", userId=user_id, recipientId=fb_page_id, orderId=order_id, stripePublishKey=stripkey, braintreeClientToken=braintree_token, braintreeMode=braintree_mode, shopcart=cart_str, wcorder=wcorder_str, wcpaygates=wcpaygates_str)
 
   def doOrderCancelled(self, request, user_id, fb_page_id, order_id):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
