@@ -6,6 +6,7 @@ const cleanCSS = require('gulp-clean-css')
 const gzip = require('gulp-gzip')
 const util = require('gulp-util')
 const runSequence = require('run-sequence')
+const gulpAwsS3 = require('gulp-s3-publish')
 
 const CLIENTJS_MINIFY_OPTS = {
   compress: {
@@ -44,12 +45,8 @@ gulp.task('build-shopcart', ['shopcart-js', 'shopcart-css'])
 Deployment
 ************************************************************************/
 
-// Upload the Shopping Cart to S3.
 // IMPORTANT: Must define environment varables before run this task.
-gulp.task('upload-s3', () => {
-  const gulpAwsS3 = require('gulp-s3-publish')
-  const gzip = require('gulp-gzip')
-
+function initAWS() {
   if (process.env.AMZBUCKET == null)
     throw new Error("Environment AMZBUCKET not defined!")
   if (process.env.AMZACCESSSECRET == null)
@@ -58,21 +55,37 @@ gulp.task('upload-s3', () => {
     throw new Error("Environment AMZACCESSKEY not defined!")
   if (process.env.AMZREGION == null)
     throw new Error("Environment AMZREGION not defined!")
-  
-  var config = {
-    key: process.env.AMZACCESSKEY,
-    secret: process.env.AMZACCESSSECRET,
-    bucket: process.env.AMZBUCKET,
-    region: process.env.AMZREGION
+
+  return {
+    config: {
+      key: process.env.AMZACCESSKEY,
+      secret: process.env.AMZACCESSSECRET,
+      bucket: process.env.AMZBUCKET,
+      region: process.env.AMZREGION
+    },
+    options: {
+      acl: 'public-read',
+      headers: {'CacheControl': 'max-age=315360000, no-transform, public'},
+      gzippedOnly: true,
+      uploadPath: 'wcbot/'
+    }
   }
+}
+
+// For production: Upload the Shopping Cart to S3.
+gulp.task('upload-s3', () => {
+  aws = initAWS();  
   util.log('Uploading shopping-cart to bucket: ' + process.env.AMZBUCKET)
-  var options = {
-    acl: 'public-read',
-    headers: {'CacheControl': 'max-age=315360000, no-transform, public'},
-    gzippedOnly: true,
-    uploadPath: 'wcbot/'
-  }
   return gulp.src('shopping-cart/**/*')
     .pipe(gzip()) // upload gzipped content to reduce download size
-    .pipe(gulpAwsS3(config, options))
+    .pipe(gulpAwsS3(aws.config, aws.options))
+})
+
+// For development: Upload the Shopping Cart to S3.
+gulp.task('upload-s3-dev', () => {
+  aws = initAWS();  
+  util.log('Uploading shopping-cart to bucket: ' + process.env.AMZBUCKET)
+  return gulp.src('shopping-cart-src/**/*')
+    .pipe(gzip()) // upload gzipped content to reduce download size
+    .pipe(gulpAwsS3(aws.config, aws.options))
 })

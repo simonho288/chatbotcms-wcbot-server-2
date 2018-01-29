@@ -4,27 +4,15 @@
 'use strict'
 
 $(document).ready(function () {
-  // $.when(
-  //   LoadShoppingCart(),
-  //   LoadWcOrder(),
-  //   LoadWcPaymentGateways()
-  // ).done(function(rstCart, rstOrder, rstPg) {
-  //   window._shoppingCart = rstCart[0]
-  //   window._wcOrder = rstOrder[0]
-  //   window._wcPaymentGateways = rstPg[0]
+  // RenderItemsIntoTable()
+  RenderScreen()
 
-    // RenderItemsIntoTable()
-    RenderScreen()
-
-    // Dismiss the loading screen
-    $('.loading_wrapper').hide()
-    $('.loaded_wrapper').show()
-    SetupUI()
-    SetupBraintreeCheckout()
-    SetupStripeCheckout()
-  // }).fail(function(err) {
-  //   console.error(err)
-  // })
+  // Dismiss the loading screen
+  $('.loading_wrapper').hide()
+  $('.loaded_wrapper').show()
+  SetupUI()
+  SetupBraintreeCheckout()
+  SetupStripeCheckout()
 })
 
 function SetupUI() {
@@ -96,7 +84,6 @@ function OnPayWithPaypal(evt) {
 
   $(this).addClass('disabled loading')
   $('#btn_back').addClass('disabled loading')
-  
   $.ajax({
     url: 'ws/checkout_submit',
     type: 'POST',
@@ -116,8 +103,8 @@ function OnPayWithPaypal(evt) {
     console.assert(result != null)
     window.location.href = result
     // PayPalFormSubmit(paypalAccount, isSandbox, result.paymentId)
-  }).fail(function(err) {
-    console.error(err)
+  }).fail(function(xhr, status, err) {
+    console.error(err + ': ' + xhr.responseText)
   })
 }
 
@@ -155,9 +142,10 @@ function OnPayWithBacs(evt) {
   }).done(function (result) {
     console.assert(result.payment_id != null)
     window.location.href = 'payment_return?pid=' + result.payment_id
-  }).fail(function (err) {
+  }).fail(function(xhr, status, err) {
     $('#btn_bacs_pay').removeClass('disabled loading')
     $('#btn_back').removeClass('disabled loading')
+    console.error(err + ': ' + xhr.responseText)
   })
 }
 
@@ -195,9 +183,10 @@ function OnPayWithCheque() {
   }).done(function (result) {
     console.assert(result.payment_id != null)
     window.location.href = 'payment_return?pid=' + result.payment_id
-  }).fail(function (err) {
+  }).fail(function(xhr, status, err) {
     $('#btn_cheque_pay').removeClass('disabled loading')
     $('#btn_back').removeClass('disabled loading')
+    console.error(err + ': ' + xhr.responseText)
   })
 }
 
@@ -235,9 +224,10 @@ function OnPayWithCod() {
   }).done(function (result) {
     console.assert(result.payment_id != null)
     window.location.href = 'payment_return?pid=' + result.payment_id
-  }).fail(function (err) {
+  }).fail(function(xhr, status, err) {
     $('#btn_cod_pay').removeClass('disabled loading')
     $('#btn_back').removeClass('disabled loading')
+    console.error(err + ': ' + xhr.responseText)
   })
 }
 
@@ -493,8 +483,8 @@ function onBtnBack(evt) {
     RemoveWcOrder().done(function() {
       var url = 'mwp?page=shopCart&uid=' + window._userId + '&rid=' + window._recipientId
       window.location.href = url
-    }).fail(function(err) {
-      console.error(err)
+    }).fail(function(xhr, status, err) {
+      console.error(err + ': ' + xhr.responseText)
     })
   })
   dlg.find('#btn_cancel').click(function (evt) {
@@ -572,10 +562,11 @@ function SetupBraintreeCheckout() {
           $('#bt-errmsg').html('')
           console.assert(result.payment_id != null)
           window.location.href = 'payment_return?pid=' + result.payment_id
-        }).fail(function (err) {
+        }).fail(function(xhr, status, err) {
           $('#bt-errmsg').html(err.statusText)
           $('#btn_braintree_pay').removeClass('disabled loading')
           $('#btn_back').removeClass('disabled loading')
+          console.error(err + ': ' + xhr.responseText)
         })
       });
     });
@@ -712,10 +703,11 @@ function SetupStripeCheckout() {
         $('#stripe_errmsg').html('')
         console.assert(result.payment_id != null)
         window.location.href = 'payment_return?pid=' + result.payment_id
-      }).fail(function (err) {
+      }).fail(function(xhr, status, err) {
         $('#stripe_errmsg').html(err)
         $('#btn_stripe_pay').removeClass('disabled loading')
         $('#btn_back').removeClass('disabled loading')
+        console.error(err + ': ' + xhr.responseText)
       })
     }
   });

@@ -20,7 +20,7 @@ from inspect import currentframe, getframeinfo
 
 logger = mod_misc.initLogger(__name__)
 app = Flask(__name__, static_folder="static", static_url_path="/")
-app = Flask(__name__)
+# app = Flask(__name__)
 if os.environ["DEBUG_MODE"] == "1":
   app.debug = True
 

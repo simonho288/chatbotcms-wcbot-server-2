@@ -161,8 +161,8 @@ function onBtnBack(evt) {
     RemoveWcOrder().done(function() {
       var url = 'mwp?page=shopCart&uid=' + window._userId + '&rid=' + window._recipientId
       window.location.href = url
-    }).fail(function(err) {
-      console.error(err)
+    }).fail(function(xhr, status, err) {
+      console.error(err + ': ' + xhr.responseText)
     })
   })
   dlg.find('#btn_cancel').click(function (evt) {

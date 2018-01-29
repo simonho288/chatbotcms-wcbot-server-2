@@ -315,8 +315,8 @@ function onBtnProceed(evt) {
       if (result1[1] === 'success' && result2[1] === 'success') {
         window.location.href = 'mwp?page=orderReview&oid=' + window._orderId + '&uid=' + window._userId + '&rid=' + window._recipientId
       }
-    }).fail(function(err) {
-      console.error(err)
+    }).fail(function(xhr, status, err) {
+      console.error(err + ': ' + xhr.responseText)
       EnableAllButtons(true)
     })
   }
