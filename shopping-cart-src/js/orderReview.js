@@ -162,7 +162,12 @@ function onBtnBack(evt) {
       var url = 'mwp?page=shopCart&uid=' + window._userId + '&rid=' + window._recipientId
       window.location.href = url
     }).fail(function(xhr, status, err) {
-      console.error(err + ': ' + xhr.responseText)
+      $.alert({
+        type: 'red',
+        useBootstrap: false,
+        title: err,
+        content: xhr.responseText,
+      })
     })
   })
   dlg.find('#btn_cancel').click(function (evt) {

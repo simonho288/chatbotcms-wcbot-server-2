@@ -100,7 +100,12 @@ function SaveCart(callback) {
       callback(true)
     }
   }).fail(function(err, result, xhr) {
-    console.error(result)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: err,
+      content: xhr.responseText,
+    })
     if (callback) {
       callback(false)
     }

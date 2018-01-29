@@ -212,7 +212,12 @@ function MethodsToSelectOptionsMarkup(zoneName, methods) {
         title += method.method_title + ': Fee ' + util.ParseCurrencyToDisp(crySts, cost)
         break
       default:
-        console.error('Unhandled shipping method: ', method.method_id)
+        $.alert({
+          type: 'red',
+          useBootstrap: false,
+          title: "Error",
+          content: 'Unhandled shipping method: ' + method.method_id
+        })
     }
     markup += '<option '
     markup += 'value="' + method.method_id + '"'
@@ -242,7 +247,12 @@ function IsPostcodeMatch(wcPostcode, userPostcode) {
     upc = parseInt(upc)
     return (upc >= nwpcs0) && (upc <= nwpcs1)
   } else {
-    console.error('Invalid WC Postcode: ', wcPostcode)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: 'Error',
+      content: 'Invalid WC Postcode: ' + wcPostcode
+    })
   }
   return false
 }
@@ -297,8 +307,13 @@ function onBtnBack(evt) {
       window.location.href = 'mwp?page=orderInfoInput&oid=' + window._orderId + '&uid=' + window._userId + '&rid=' + window._recipientId
     }
   }).fail(function(err, result, xhr) {
-    console.error(result)
     EnableAllButtons(true)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: err,
+      content: xhr.responseText,
+    })
   })
 }
 
@@ -316,8 +331,13 @@ function onBtnProceed(evt) {
         window.location.href = 'mwp?page=orderReview&oid=' + window._orderId + '&uid=' + window._userId + '&rid=' + window._recipientId
       }
     }).fail(function(xhr, status, err) {
-      console.error(err + ': ' + xhr.responseText)
       EnableAllButtons(true)
+      $.alert({
+        type: 'red',
+        useBootstrap: false,
+        title: err,
+        content: xhr.responseText,
+      })
     })
   }
 }

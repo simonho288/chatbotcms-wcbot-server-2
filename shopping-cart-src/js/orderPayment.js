@@ -104,7 +104,12 @@ function OnPayWithPaypal(evt) {
     window.location.href = result
     // PayPalFormSubmit(paypalAccount, isSandbox, result.paymentId)
   }).fail(function(xhr, status, err) {
-    console.error(err + ': ' + xhr.responseText)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: err,
+      content: xhr.responseText,
+    })
   })
 }
 
@@ -145,7 +150,12 @@ function OnPayWithBacs(evt) {
   }).fail(function(xhr, status, err) {
     $('#btn_bacs_pay').removeClass('disabled loading')
     $('#btn_back').removeClass('disabled loading')
-    console.error(err + ': ' + xhr.responseText)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: err,
+      content: xhr.responseText,
+    })
   })
 }
 
@@ -186,7 +196,12 @@ function OnPayWithCheque() {
   }).fail(function(xhr, status, err) {
     $('#btn_cheque_pay').removeClass('disabled loading')
     $('#btn_back').removeClass('disabled loading')
-    console.error(err + ': ' + xhr.responseText)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: err,
+      content: xhr.responseText,
+    })
   })
 }
 
@@ -227,7 +242,12 @@ function OnPayWithCod() {
   }).fail(function(xhr, status, err) {
     $('#btn_cod_pay').removeClass('disabled loading')
     $('#btn_back').removeClass('disabled loading')
-    console.error(err + ': ' + xhr.responseText)
+    $.alert({
+      type: 'red',
+      useBootstrap: false,
+      title: err,
+      content: xhr.responseText,
+    })
   })
 }
 
@@ -484,7 +504,12 @@ function onBtnBack(evt) {
       var url = 'mwp?page=shopCart&uid=' + window._userId + '&rid=' + window._recipientId
       window.location.href = url
     }).fail(function(xhr, status, err) {
-      console.error(err + ': ' + xhr.responseText)
+      $.alert({
+        type: 'red',
+        useBootstrap: false,
+        title: err,
+        content: xhr.responseText,
+      })
     })
   })
   dlg.find('#btn_cancel').click(function (evt) {
@@ -518,7 +543,12 @@ function SetupBraintreeCheckout() {
     }
   }, function (err, instance) {
     if (err) {
-      console.error(err)
+      $.alert({
+        type: 'red',
+        useBootstrap: false,
+        title: "Error",
+        content: err,
+      })
       return
     }
 
@@ -566,7 +596,12 @@ function SetupBraintreeCheckout() {
           $('#bt-errmsg').html(err.statusText)
           $('#btn_braintree_pay').removeClass('disabled loading')
           $('#btn_back').removeClass('disabled loading')
-          console.error(err + ': ' + xhr.responseText)
+          $.alert({
+            type: 'red',
+            useBootstrap: false,
+            title: err,
+            content: xhr.responseText,
+          })
         })
       });
     });
@@ -707,7 +742,12 @@ function SetupStripeCheckout() {
         $('#stripe_errmsg').html(err)
         $('#btn_stripe_pay').removeClass('disabled loading')
         $('#btn_back').removeClass('disabled loading')
-        console.error(err + ': ' + xhr.responseText)
+        $.alert({
+          type: 'red',
+          useBootstrap: false,
+          title: err,
+          content: xhr.responseText,
+        })
       })
     }
   });

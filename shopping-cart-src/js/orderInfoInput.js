@@ -509,8 +509,13 @@ function onBtnProceed(evt) {
           window.location.href = 'mwp?page=orderShipping&uid=' + window._userId + '&rid=' + window._recipientId
         }
       }).fail(function(err, result, xhr) {
-        console.error(result)
         EnableAllButtons(true)
+        $.alert({
+          type: 'red',
+          useBootstrap: false,
+          title: err,
+          content: xhr.responseText,
+        })
       })
       // CreateOrUpdateWcOrder(data)
     }
