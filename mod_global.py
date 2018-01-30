@@ -21,7 +21,4 @@ def server_entry(request, remove_path=None):
     url = url[:len(url) - len(remove_path)]
   SERVER_URL = url + "/"
   SERVER_URL_ROOT = request.url_root
-  # For personal PC debugging only :)
-  if "localhost" in SERVER_URL or "127.0.0" in SERVER_URL:
-    SERVER_URL = "https://dev-5000.simonho.net/" # Messenger API friendly
   logger.info("SERVER_URL=" + SERVER_URL)
