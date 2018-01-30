@@ -27,7 +27,7 @@ class Messenger:
       return self.client_rec
     rec = self.m_db.findClientByFbPageId(fb_page_id)
     if rec is None:
-      raise Exception("client record not found by fb page id" + fb_page_id)
+      raise Exception("client record not found by fb page id: " + fb_page_id)
     self.client_rec = rec
     return rec
 
