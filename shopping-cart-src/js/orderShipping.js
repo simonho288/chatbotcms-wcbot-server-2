@@ -265,7 +265,8 @@ function ParseAndCalcShipCost(val) {
   if (val == null || val == '')
     return 0
 
-  var expression = val.toLowerCase()
+  var expression = val.toLowerCase().replace(/&#39;/g, '"')
+
   // var expression = '20 + [ fee percent="10" min_fee="4" ]'
   // var expression = '20 + [ qty]*10'
   // var expression = '[qty] * 10 + [fee percent="10" min_fee="4"]'
