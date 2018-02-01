@@ -611,8 +611,8 @@ class WcBot:
     m_db = mod_database.Mdb()
     # get shopping cart
     shop_cart = m_db.findShopcartByUserAndFbpageid(user_id, client_rec["fb_page_id"])
-    if shop_cart is not None and shop_cart["record"]["cart_items"] is not None:
-      if len(shop_cart["record"]["cart_items"]) > 0:
+    if shop_cart is not None and shop_cart["doc"]["cart_items"] is not None:
+      if len(shop_cart["doc"]["cart_items"]) > 0:
         buttons.append({
           "title": "View your cart",
           "type": "postback",
