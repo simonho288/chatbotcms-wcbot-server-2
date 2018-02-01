@@ -14,6 +14,9 @@
 + i am *
 - <set name=<formal>>Nice to meet you, <get name>. What can I help you? You can click the menu and select 'quick help' or enter 'help'.
 
++ [*] (cool|awesome|nice)
+- :)
+
 + *
 - Sorry! I'm not sure how to reply to that one. Enter 'help' to get help
 
