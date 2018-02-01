@@ -65,7 +65,7 @@ Rivescript brain file for cms_wc
 + [*] (store|shop) name
 @ woocommerce_show_store_name
 
-+ [*] (web site) [*]
++ [*] (web|website) [*]
 @ woocommerce_show_store_url
 
 + [*] price under *

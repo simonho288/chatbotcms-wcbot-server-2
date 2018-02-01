@@ -101,7 +101,8 @@
 ! sub product   = products
 ! sub item      = items
 ! sub category  = categories
-! sub website   = web site
+! sub web site  = website
+! sub site      = website
 ! sub less than = under
 ! sub lower than = under
 ! sub fewer than = under
