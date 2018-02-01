@@ -170,3 +170,6 @@ def remove_empty_string(d):
 
 def genRandomId():
   return str(round(time.time() * random.randint(1, 1000)))
+
+def isNumeric(s):
+  return s.lstrip("-").replace(".", "", 1).isdigit()

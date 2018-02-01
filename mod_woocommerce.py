@@ -98,13 +98,33 @@ class Wc:
       logger.error(traceback.format_exc())
       raise exp
 
-  def searchProducts(self, keyword, items_per_page, page_no):
+  def searchProductsByName(self, items_per_page, page_no, name):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(items_per_page, int)
     assert isinstance(page_no, int)
-    kw_url = quote(keyword)
+    kw_url = quote(name)
     # print("kw_url=" + kw_url)
     url = "products?search={0}&status=publish&per_page={1}&page={2}".format(kw_url, items_per_page, page_no)
+    try:
+      r = self.wcapi.get(url)
+      return json.loads(mod_misc.wcCorrectResp(r.text))
+    except Exception as exp:
+      logger.error(traceback.format_exc())
+      raise exp
+
+  def searchProductsByPriceRange(self, items_per_page, page_no, min_price, max_price):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(items_per_page, int)
+    assert isinstance(page_no, int)
+    assert min_price is not None or max_price is not None
+    # print("kw_url=" + kw_url)
+    # url = "products?search={0}&status=publish&per_page={1}&page={2}".format(kw_url, items_per_page, page_no)
+    url = "products?"
+    if min_price is not None:
+      url += "min_price=" + min_price + "&"
+    if max_price is not None:
+      url += "max_price=" + max_price + "&"
+    url += "status=publish&per_page={0}&page={1}".format(items_per_page, page_no)
     try:
       r = self.wcapi.get(url)
       return json.loads(mod_misc.wcCorrectResp(r.text))
@@ -269,8 +289,6 @@ class Wc:
 
 def handleAuthenicate(params):
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-  print("SERVER_URL")
-  print(SERVER_URL)
   this_host = "https://" + SERVER_URL
   store_url = param["wp_host"]
   endpoint = "/wc-auth/v1/authorize"

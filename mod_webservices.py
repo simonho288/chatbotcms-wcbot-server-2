@@ -69,8 +69,6 @@ class Shopcart:
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(request.args["_id"], str)
     m_db = mod_database.Mdb()
-    print("_id:")
-    print(request.args["_id"])
     client_rec = m_db.findClientByVerifyToken(request.args["_id"])
     resp = make_response(jsonify(client_rec), 200)
     resp.headers["Access-Control-Allow-Origin"] = "*"

@@ -229,8 +229,6 @@ def getMessengerWhitelistedDomain(access_token):
   }
   result = requests.get(FBSRV_URL + "me/messenger_profile", params=param)
   result = result.json()["data"]
-  print("result:")
-  print(result)
   if len(result) == 0:
     return []
   elif "whitelisted_domains" in result[0]:

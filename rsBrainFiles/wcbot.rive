@@ -29,7 +29,15 @@ Rivescript brain file for cms_wc
 + woocommerce_list_all_orders
 - _jsListAllOrders_
 
++ woocommerce_show_store_name
+- _jsShowStoreName_
+
++ woocommerce_show_store_url
+- _jsShowStoreUrl_
+
+// ----------------------------------------------------------------------
 // All its redirect
+
 + [*] help
 @ woocommerce_quickhelp
 
@@ -49,7 +57,24 @@ Rivescript brain file for cms_wc
 @ woocommerce_view_cart
 
 + (search|find) (items|products) *
-- <call>find_products <star3></call>
+- <call>rs_find_products <star3></call>
 
 + * (my|all) orders
 @ woocommerce_list_all_orders
+
++ [*] (store|shop) name
+@ woocommerce_show_store_name
+
++ [*] (web site) [*]
+@ woocommerce_show_store_url
+
++ [*] price under *
+- <call>rs_list_product_price_under <star></call>
+
++ [*] price above *
+- <call>rs_list_product_price_above <star></call>
+
++ [*] price between * [and] *
+- <call>rs_list_product_price_range <star1> <star2></call>
++ [*] price range * [and] *
+- <call>rs_list_product_price_range <star1> <star2></call>

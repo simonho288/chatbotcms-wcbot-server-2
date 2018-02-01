@@ -158,7 +158,7 @@ def __createDynamoTables():
       "WriteCapacityUnits": 5
     }
   )
-  print("Tables creation initiative. It should be finishen within several minutes. Please check the status in AWS dynamodb console.")
+  logger.debug("Tables creation initiative. It should be finishen within several minutes. Please check the status in AWS dynamodb console.")
 
 def __convertTable_Clients():
   # Source database (MongoDB)

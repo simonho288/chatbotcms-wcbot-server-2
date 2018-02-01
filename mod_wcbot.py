@@ -36,6 +36,9 @@ PAYLOAD_ADDTOCART = "PLADDTOCART" # product_id
 PAYLOAD_SHOWHINTS = "PLSHOWHINTS"
 PAYLOAD_VIEWCART = "PLVIEWCART"
 PAYLOAD_FINDPRODUCTS = "PLFINDPRODUCTS" # keyword, page no
+PAYLOAD_PRODUCTS_PRICE_BETWEEN = "PLPRODUCTSPRICEBETWEEN"
+PAYLOAD_PRODUCTS_PRICE_MIN = "PLPRODUCTSPRICEMIN"
+PAYLOAD_PRODUCTS_PRICE_MAX = "PLPRODUCTSPRICEMAX"
 PAYLOAD_ORDERDETAILS = "PLORDERDETAILS" # order_id
 PAYLOAD_QUICKHELP = "PLQUICKHELP"
 # Rivescript variable name
@@ -76,6 +79,10 @@ class WcBot:
         return self.doViewCart(client_rec, m_nls, user_id)
       elif reply == "_jsListAllOrders_":
         return self.doListAllOrders(client_rec, m_nls, user_id)
+      elif reply == "_jsShowStoreName_":
+        return self.doShowStoreName(client_rec, m_nls, user_id)
+      elif reply == "_jsShowStoreUrl_":
+        return self.doShowStoreUrl(client_rec, m_nls, user_id)
     except Exception as ex:
       # the problem maybe: woocommerce connection problem, php not started
       traceback.print_exc(file=sys.stdout)
@@ -114,15 +121,26 @@ class WcBot:
     elif payload_cmd == PAYLOAD_QUICKHELP:
       return self.doQuickHelp(client_rec, m_nls, user_id)
     elif payload_cmd == PAYLOAD_FINDPRODUCTS:
-      return self.doFindProducts(payloads[1], client_rec, user_id, int(payloads[2]))
+      return self.doGetProductsByName(client_rec, user_id, int(payloads[2]), payloads[1])
     elif payload_cmd == PAYLOAD_ORDERDETAILS:
       return self.doOrderDetails(client_rec, user_id, payloads[1])
     elif payload_cmd == PAYLOAD_GETSTARTED:
       return self.doGetStarted(client_rec, m_nls, user_id)
+    elif payload_cmd == PAYLOAD_PRODUCTS_PRICE_MAX:
+      price = payloads[1]
+      return self.doGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price under " + price, max_price=price)
+    elif payload_cmd == PAYLOAD_PRODUCTS_PRICE_MIN:
+      price = payloads[1]
+      return self.doGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price above " + price, min_price=price)
+    elif payload_cmd == PAYLOAD_PRODUCTS_PRICE_BETWEEN:
+      prices = payloads[1].split("&")
+      min_price = prices[0]
+      max_price = prices[1]
+      return self.doGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price between " + min_price + " and " + max_price, min_price=min_price, max_price=max_price)
     return False
 
-  # called from rivescript subsubroutine by trigger 'find_products"
-  def cbFindProducts(self, rs, args):
+  # called from rivescript subsubroutine by trigger 'rs_find_products"
+  def rsSubFindProducts(self, rs, args):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     user_id = rs.current_user()
     fb_page_id = rs.get_uservar(user_id, "fb_page_id")
@@ -133,7 +151,69 @@ class WcBot:
     client_rec = mdb.findClientByFbPageId(fb_page_id)
     name = " ".join([str(s) for s in args])
     try:
-      self.doFindProducts(name, client_rec, user_id, 1)
+      self.doGetProductsByName(client_rec, user_id, 1, name)
+    except Exception as exp:
+      traceback.print_exc(file=sys.stdout)
+
+  def rsSubProductsPriceBelow(self, rs, args):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    user_id = rs.current_user()
+    fb_page_id = rs.get_uservar(user_id, "fb_page_id")
+    assert isinstance(user_id, str)
+    assert isinstance(fb_page_id, str)
+    assert len(args) > 0
+    mdb = mod_database.Mdb()
+    client_rec = mdb.findClientByFbPageId(fb_page_id)
+    price = args[0]
+    if not mod_misc.isNumeric(price):
+      msg = "Your price is incorrect! Please try again."
+      mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
+      return
+    try:
+      self.doGetProductsByPrice(client_rec, user_id, 1, "The products which the price under " + price, max_price=price)
+    except Exception as exp:
+      traceback.print_exc(file=sys.stdout)
+
+  def rsSubProductsPriceAbove(self, rs, args):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    user_id = rs.current_user()
+    fb_page_id = rs.get_uservar(user_id, "fb_page_id")
+    assert isinstance(user_id, str)
+    assert isinstance(fb_page_id, str)
+    assert len(args) > 0
+    mdb = mod_database.Mdb()
+    client_rec = mdb.findClientByFbPageId(fb_page_id)
+    price = args[0]
+    if not mod_misc.isNumeric(price):
+      msg = "Your price is incorrect! Please try again."
+      mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
+      return
+    try:
+      self.doGetProductsByPrice(client_rec, user_id, 1, "The products which the price above " + price, min_price=price)
+    except Exception as exp:
+      traceback.print_exc(file=sys.stdout)
+
+  def rsSubProductsPriceRange(self, rs, args):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    user_id = rs.current_user()
+    fb_page_id = rs.get_uservar(user_id, "fb_page_id")
+    assert isinstance(user_id, str)
+    assert isinstance(fb_page_id, str)
+    assert len(args) > 1
+    mdb = mod_database.Mdb()
+    client_rec = mdb.findClientByFbPageId(fb_page_id)
+    min_price = args[0]
+    max_price = args[1]
+    if not mod_misc.isNumeric(min_price) or not mod_misc.isNumeric(max_price):
+      msg = "Your price is incorrect! Please try again."
+      mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
+      return
+    if float(min_price) > float(max_price): # swap the prices
+      t = min_price
+      min_price = max_price
+      max_price = t
+    try:
+      self.doGetProductsByPrice(client_rec, user_id, 1, "The products which the price between " + min_price + " and " + max_price, min_price=min_price, max_price=max_price)
     except Exception as exp:
       traceback.print_exc(file=sys.stdout)
 
@@ -166,7 +246,7 @@ class WcBot:
     assert client_rec is not None
     assert m_nls is not None
     assert isinstance(user_id, str)
-    msg = "* QUICK HELP *" + CR + "You can send me the command like:" + CR + "  show products" + CR + "  show hot products" + CR + "  show category" + CR + "  show all order" + CR + "  view shopping cart" + CR + "  find product tshirt" + CR
+    msg = "* QUICK HELP *" + CR + "You can send me the command like:" + CR + "  show products" + CR + "  show hot products" + CR + "  show category" + CR + "  show all order" + CR + "  view shopping cart" + CR + "  find product tshirt" + CR + "  product price under 30" + CR + "  product price between 10 and 20"
     mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
     return True
 
@@ -190,35 +270,7 @@ class WcBot:
       records = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no, category_id=catg_id)
     else:
       records = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no)
-    mgr_prods = [] # messenger items template
-    for rec in records:
-      category = mod_misc.strMakeComma(rec["categories"])
-      image = ""
-      if len(rec["images"]) > 0 and rec["images"][0]["src"] is not None:
-        image = rec["images"][0]["src"]
-      # logger.debug(rec)
-      price = mod_misc.wcMakeCurrencyStr(self.currcy_sts, float(rec["price"]))
-      mgr_prods.append({
-        "title": rec["name"],
-        "subtitle": "Category: {0}\nPrice {1}".format(category, price),
-        "image_url": image,
-        "buttons": [{
-          "type": "postback",
-          "title": "Detail",
-          "payload": "{0}_{1}".format(PAYLOAD_SHOWPRODUCT, rec["id"])
-        }, {
-          "type": 'postback',
-          "title": 'Add to Cart',
-          "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, rec["id"])
-        }]
-      })
-
-    if len(records) >= ITEMS_PER_PAGE:
-      mgr_prods[ITEMS_PER_PAGE - 1]["buttons"].append({
-        "type": 'postback',
-        "title": 'More products',
-        "payload": "{0}_{1}".format(PAYLOAD_LISTPRODUCTS, page_no + 1)
-      })
+    mgr_prods = self.productsToMessengerImages(records, PAYLOAD_LISTPRODUCTS, page_no)
     mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
     return True
 
@@ -242,35 +294,7 @@ class WcBot:
     if len(tagrs) > 0 and tagrs[0]["count"] > 0:
       tagr = tagrs[0]
       products = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no, tag_id=tagr["id"])
-      mgr_prods = [] # messenger items template
-      for product in products:
-        category = mod_misc.strMakeComma(product["categories"])
-        image = ""
-        if len(product["images"]) > 0 and product["images"][0]["src"] is not None:
-          image = product["images"][0]["src"]
-        # logger.debug(product)
-        price = mod_misc.wcMakeCurrencyStr(self.currcy_sts, float(product["price"]))
-        mgr_prods.append({
-          "title": product["name"],
-          "subtitle": "Category: {0}\nPrice {1}".format(category, price),
-          "image_url": image,
-          "buttons": [{
-            "type": "postback",
-            "title": "Detail",
-            "payload": "{0}_{1}".format(PAYLOAD_SHOWPRODUCT, product["id"])
-          }, {
-            "type": 'postback',
-            "title": 'Add to Cart',
-            "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, product["id"])
-          }]
-        })
-
-      if len(products) >= ITEMS_PER_PAGE:
-        mgr_prods[ITEMS_PER_PAGE - 1]["buttons"].append({
-          "type": 'postback',
-          "title": 'More hot products',
-          "payload": "{0}_{1}".format(PAYLOAD_HOTPRODUCTS, page_no + 1)
-        })
+      mgr_prods = self.productsToMessengerImages(products, PAYLOAD_HOTPRODUCTS, page_no)
       mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
     else:
       mod_messenger.sendMessengerTextMessage(acc_tok, user_id, MSG_NO_HOT_PRODUCTS)
@@ -309,7 +333,6 @@ class WcBot:
           "payload": "{0}_1_{1}".format(PAYLOAD_LISTPRODUCTS, rec["id"])
         }]
       })
-
     if len(records) >= ITEMS_PER_PAGE:
       mgr_prods[ITEMS_PER_PAGE - 1]["buttons"].append({
         "type": 'postback',
@@ -439,7 +462,7 @@ class WcBot:
       mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, btns)
     return True
 
-  def doFindProducts(self, name, client_rec, user_id, page_no):
+  def doGetProductsByName(self, client_rec, user_id, page_no, name):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(name, str)
     assert client_rec is not None
@@ -455,39 +478,46 @@ class WcBot:
     if self.raw_gensts is None: # needs for formatting currency
       self.raw_gensts = self.m_woocom.getGeneralSetting()
       self.parseGeneralSetting(self.raw_gensts)
-    records = self.m_woocom.searchProducts(name, ITEMS_PER_PAGE, page_no)
+    records = self.m_woocom.searchProductsByName(ITEMS_PER_PAGE, page_no, name)
     if len(records) == 0:
-      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, "Sorry, product no matched!")
+      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, "Sorry, product no matched with " + name + "!")
       return True
-    mgr_prods = [] # messenger items template
-    for rec in records:
-      category = mod_misc.strMakeComma(rec["categories"])
-      image = ""
-      if len(rec["images"]) > 0 and rec["images"][0]["src"] is not None:
-        image = rec["images"][0]["src"]
-      # logger.debug(rec)
-      price = mod_misc.wcMakeCurrencyStr(self.currcy_sts, float(rec["price"]))
-      mgr_prods.append({
-        "title": rec["name"], 
-        "subtitle": "Category: {0}\nPrice {1}".format(category, price),
-        "image_url": image,
-        "buttons": [{
-          "type": "postback",
-          "title": "Detail",
-          "payload": "{0}_{1}".format(PAYLOAD_SHOWPRODUCT, rec["id"])
-        }, {
-          "type": 'postback',
-          "title": 'Add to Cart',
-          "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, rec["id"])
-        }]
-      })
+    out_msg = "I found {0} products which the name like {1}:".format(len(records), name)
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+    mgr_prods = self.productsToMessengerImages(records, PAYLOAD_FINDPRODUCTS + "_" + name, page_no)
+    mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
+    return True
 
-    if len(records) >= ITEMS_PER_PAGE:
-      mgr_prods[ITEMS_PER_PAGE - 1]["buttons"].append({
-        "type": 'postback',
-        "title": 'More search results',
-        "payload": "{0}_{1}_{2}".format(PAYLOAD_FINDPRODUCTS, name, page_no + 1)
-      })
+  def doGetProductsByPrice(self, client_rec, user_id, page_no, image_msg, min_price=None, max_price=None):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert isinstance(user_id, str)
+    assert isinstance(page_no, int)
+    assert min_price is not None or max_price is not None
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    out_msg = "Products looking up..."
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+    time.sleep(1)
+    if self.m_woocom is None:
+      rec_wc = client_rec["woocommerce"]
+      self.m_woocom = mod_woocommerce.Wc(rec_wc["url"], rec_wc["consumer_key"], rec_wc["consumer_secret"])
+    if self.raw_gensts is None: # needs for formatting currency
+      self.raw_gensts = self.m_woocom.getGeneralSetting()
+      self.parseGeneralSetting(self.raw_gensts)
+    records = self.m_woocom.searchProductsByPriceRange(ITEMS_PER_PAGE, page_no, min_price, max_price)
+    if len(records) == 0:
+      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, "Sorry, product no matched with " + name + "!")
+      return True
+    # sort the result by price
+    records2 = sorted(records, key=lambda k: float(k["price"]))
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, image_msg)
+    if min_price is not None and max_price is not None:
+      payload = PAYLOAD_PRODUCTS_PRICE_BETWEEN + "_" + min_price + "&" + max_price
+    elif min_price is not None:
+      payload = PAYLOAD_PRODUCTS_PRICE_MIN + "_" + min_price
+    elif max_price is not None:
+      payload = PAYLOAD_PRODUCTS_PRICE_MAX + "_" + max_price
+    mgr_prods = self.productsToMessengerImages(records2, payload, page_no)
     mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
     return True
 
@@ -539,8 +569,6 @@ class WcBot:
     fb_page_id = client_rec["fb_page_id"]
     m_db = mod_database.Mdb()
     ord = m_db.findOrderPoolById(order_id)["doc"]
-    print("ord:")
-    print(ord)
     if self.m_woocom is None:
       rec_wc = client_rec["woocommerce"]
       self.m_woocom = mod_woocommerce.Wc(rec_wc["url"], rec_wc["consumer_key"], rec_wc["consumer_secret"])
@@ -610,3 +638,74 @@ class WcBot:
     out_msg = "Hello {0}, Welcome to {1}. Please select your act".format(user_name, site_name)
     mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
     return True
+
+  def doShowStoreName(self, client_rec, m_nls, user_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert m_nls is not None
+    assert isinstance(user_id, str)
+    site_name = "Chatbot CMS - WcBot"
+    if "site_name" in client_rec["woocommerce"]:
+      site_name = client_rec["woocommerce"]["site_name"]
+    out_msg = "Our store name is {0}".format(site_name)
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+    return True
+
+  def doShowStoreUrl(self, client_rec, m_nls, user_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert m_nls is not None
+    assert isinstance(user_id, str)
+    site_url = client_rec["woocommerce"]["url"]
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    out_msg = "Our store website address is " + site_url
+    buttons = [{
+      "title": 'Browse it now',
+      "type": "web_url",
+      "url": site_url
+    }]
+    mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
+    return True
+
+  def productsToMessengerImages(self, records, payload_prefix, page_no):
+    """
+    Create Messenger images template list from woocommerce products
+    """
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(records, list)
+    assert isinstance(payload_prefix, str)
+    results = []
+    i = 0
+    for rec in records:
+      category = mod_misc.strMakeComma(rec["categories"])
+      image = ""
+      if len(rec["images"]) > 0 and rec["images"][0]["src"] is not None:
+        image = rec["images"][0]["src"]
+      # logger.debug(rec)
+      price = mod_misc.wcMakeCurrencyStr(self.currcy_sts, float(rec["price"]))
+      results.append({
+        "title": rec["name"],
+        "subtitle": "Category: {0}\nPrice {1}".format(category, price),
+        "image_url": image,
+        "buttons": [{
+          "type": "postback",
+          "title": "Detail",
+          "payload": "{0}_{1}".format(PAYLOAD_SHOWPRODUCT, rec["id"])
+        }, {
+          "type": 'postback',
+          "title": 'Add to Cart',
+          "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, rec["id"])
+        }]
+      })
+      i += 1
+      if i == ITEMS_PER_PAGE:
+        break
+
+    if len(records) >= ITEMS_PER_PAGE:
+      results[ITEMS_PER_PAGE - 1]["buttons"].append({
+        "type": 'postback',
+        "title": 'Show More',
+        "payload": "{0}_{1}".format(payload_prefix, page_no + 1)
+      })
+    return results

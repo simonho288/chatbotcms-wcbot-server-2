@@ -1,3 +1,4 @@
+import re
 import os
 import logging
 import inspect
@@ -17,7 +18,7 @@ class Nls:
     assert isinstance(user_id, str)
     assert isinstance(fb_page_id, str)
     rsbot = rivescript.RiveScript(utf8=True)
-    # rsbot = RiveScript()
+    rsbot.unicode_punctuation = re.compile(r'[,!?;:]') # re.compile(r'[.,!?;:]')
     rsbot.load_directory("./rsBrainFiles")
     rsbot.sort_replies()
     rsbot.set_uservar(user_id, "fb_page_id", fb_page_id)
@@ -49,6 +50,9 @@ class Nls:
   def setSubroutines(self, wc_bot):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert wc_bot is not None
-    self.rsbot.set_subroutine('find_products', wc_bot.cbFindProducts)
+    self.rsbot.set_subroutine("rs_find_products", wc_bot.rsSubFindProducts)
+    self.rsbot.set_subroutine("rs_list_product_price_under", wc_bot.rsSubProductsPriceBelow)
+    self.rsbot.set_subroutine("rs_list_product_price_above", wc_bot.rsSubProductsPriceAbove)
+    self.rsbot.set_subroutine("rs_list_product_price_range", wc_bot.rsSubProductsPriceRange)
 
 

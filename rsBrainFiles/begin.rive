@@ -101,6 +101,15 @@
 ! sub product   = products
 ! sub item      = items
 ! sub category  = categories
+! sub website   = web site
+! sub less than = under
+! sub lower than = under
+! sub fewer than = under
+! sub below     = under
+! sub more than = above
+! sub greater than = above
+! sub larger than = above
+! sub higer than = above
 
 // Person substitutions
 ! person i am    = you are

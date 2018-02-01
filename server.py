@@ -36,7 +36,6 @@ def index():
 def send_js(path):
   # return send_from_directory("static/js", path)
   path = "static/js/" + path
-  print("path=" + path)
   with open(path, "r") as f:
     data = f.read()
     f.close()
