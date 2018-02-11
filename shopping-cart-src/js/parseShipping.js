@@ -1,5 +1,5 @@
 /**
- * This module mainly handles the WooCommerce shipping method parsing.
+ * This module mainly handles the WooCommerce shipping method parsing. It makes use of https://github.com/aaditmshah/lexer for expression parsing.
  */
 
 var REGEX_SPACE = /\s+/ // one or more space(s)

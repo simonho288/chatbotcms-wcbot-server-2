@@ -271,7 +271,6 @@ function ParseAndCalcShipCost(val) {
   // var expression = '20 + [ qty]*10'
   // var expression = '[qty] * 10 + [fee percent="10" min_fee="4"]'
   // var expression = '10 + (1 + 2) * [qty]'
-  // var expression = '20 + [ fee min_fee = 300 ]'
 
   return ParseWithLexer(expression) // see parseShipping.js
 } // ParseAndCalcShipCost()
