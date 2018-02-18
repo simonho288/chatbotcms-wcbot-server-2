@@ -18,7 +18,7 @@
     "pump": "^2.0.1",
     "run-sequence": "^2.2.1",
     "serverless-python-requirements": "^3.3.0",
-    "serverless-wsgi": "^1.4.5",
+    "serverless-wsgi": "^1.4.6",
     "yamljs": "^0.3.0"
   },
   "dependencies": {
