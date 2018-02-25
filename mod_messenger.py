@@ -67,12 +67,16 @@ class Messenger:
     assert msg is not None
     assert isinstance(msg["sender"]["id"], str)
     assert isinstance(msg["recipient"]["id"], str)
-    assert isinstance(msg["message"]["text"], str)
     assert self.m_wcbot is not None
     user_id = msg["sender"]["id"] # end user's messenger id
     fb_page_id = msg["recipient"]["id"] # target facebook page id
-    message = msg["message"]["text"]
-    logger.debug("user_id=%s, fb_page_id=%s, message=%s", user_id, fb_page_id, message)
+    message = None; sticker_id = None
+    if "sticker_id" in msg["message"] is not None:
+      sticker_id = msg["message"]["sticker_id"]
+      logger.debug("user_id=%s, fb_page_id=%s, sticker_id=%d", user_id, fb_page_id, sticker_id)
+    elif "text" in msg["message"] is not None:
+      message = msg["message"]["text"]
+      logger.debug("user_id=%s, fb_page_id=%s, message=%s", user_id, fb_page_id, message)
     client_rec = self.getClientRecByFbPageId(fb_page_id)
     access_token = client_rec["facebook_page"]["access_token"]
     sendMessengerTyping(access_token, user_id, True)
@@ -82,7 +86,10 @@ class Messenger:
     c_nls.setSubroutines(self.m_wcbot)
     if (usrvar_rec is not None):
       c_nls.setUserVars(user_id, json.loads(usrvar_rec["doc"]))
-    reply = c_nls.getReply(user_id, message)
+    if sticker_id is not None:
+      reply = c_nls.getReply(user_id, sticker_id=sticker_id)
+    elif message is not None:
+      reply = c_nls.getReply(user_id, message=message)
     logger.debug("reply: %s", reply)
     if len(reply) > 0:
       if not self.m_wcbot.filterReplyCommand(reply, client_rec, c_nls, user_id):

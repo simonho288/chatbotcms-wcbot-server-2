@@ -24,12 +24,22 @@ class Nls:
     rsbot.set_uservar(user_id, "fb_page_id", fb_page_id)
     self.rsbot = rsbot
 
-  def getReply(self, userId, msg):
+  def getReply(self, userId, message=None, sticker_id=None):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(userId, str)
-    assert isinstance(msg, str)
-    return self.rsbot.reply(userId, msg)
+    if sticker_id is not None:
+      return self.replySticker(sticker_id)
+    elif message is not None:
+      return self.rsbot.reply(userId, message)
 
+  def replySticker(self, sticker_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(sticker_id, int)
+    if sticker_id == 369239263222822:
+      return ":)"
+    else:
+      return "?"
+    
   def getUserVars(self, userId):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(userId, str)
