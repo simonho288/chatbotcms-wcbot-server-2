@@ -1,6 +1,6 @@
 const gulp = require('gulp')
 const uglify = require('gulp-uglify') // for client-side JS minify
-const minify = require('gulp-minify') // for server-side JS minfy (ES6)
+const minify = require('gulp-minify') // for server-side JS minify (ES6)
 const pump = require('pump')
 const cleanCSS = require('gulp-clean-css')
 const gzip = require('gulp-gzip')

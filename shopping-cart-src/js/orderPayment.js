@@ -704,12 +704,12 @@ function SetupStripeCheckout() {
   var stripeSts = findPaymentGateways('stripe')
   console.assert(stripeSts != null)
   var checkoutImage = stripeSts.settings.stripe_checkout_image.value
-  var locale = stripeSts.settings.stripe_checkout_locale.value
+  // var locale = stripeSts.settings.stripe_checkout_locale.value
 
   var checkout = StripeCheckout.configure({
     key: window._stripePublishKey,
     image: checkoutImage,
-    locale: locale,
+    // locale: locale,
     token: function (token) {
       // You can access the token ID with `token.id`.
       // Get the token ID to your server-side code for use.

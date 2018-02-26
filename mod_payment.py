@@ -208,13 +208,18 @@ class Paygate(object):
     assert isinstance(gateway_sts["testmode"]["value"], str)
     print("mod_global.SERVER_URL=" + mod_global.SERVER_URL)
     # Pre-save a payment to database
-    api_username = gateway_sts["api_username"]["value"]
-    api_password = gateway_sts["api_password"]["value"]
-    api_signature = gateway_sts["api_signature"]["value"]
-    email = gateway_sts["email"]["value"]
     test_mode = gateway_sts["testmode"]["value"]
-    if test_mode == "yes": mode = "sandbox"
-    else: mode = "live"
+    if test_mode == "yes":
+      mode = "sandbox"
+      api_username = gateway_sts["sandbox_api_username"]["value"]
+      api_password = gateway_sts["sandbox_api_password"]["value"]
+      api_signature = gateway_sts["sandbox_api_signature"]["value"]
+    else:
+      mode = "live"
+      api_username = gateway_sts["api_username"]["value"]
+      api_password = gateway_sts["api_password"]["value"]
+      api_signature = gateway_sts["api_signature"]["value"]
+    email = gateway_sts["email"]["value"]
     urls = mod_misc.getPaypalUrlsByMode(mode)
     nvp_data = {
       "USER": api_username,
@@ -372,11 +377,16 @@ class Paygate(object):
     token = request.values["token"]
     payer_id = request.values["PayerID"]
     gateway_sts = payment_rec["gateway_settings"]
-    api_username = gateway_sts["api_username"]["value"]
-    api_password = gateway_sts["api_password"]["value"]
-    api_signature = gateway_sts["api_signature"]["value"]
-    email = gateway_sts["email"]["value"]
     test_mode = gateway_sts["testmode"]["value"]
+    if test_mode == "yes":
+      api_username = gateway_sts["sandbox_api_username"]["value"]
+      api_password = gateway_sts["sandbox_api_password"]["value"]
+      api_signature = gateway_sts["sandbox_api_signature"]["value"]
+    else:
+      api_username = gateway_sts["api_username"]["value"]
+      api_password = gateway_sts["api_password"]["value"]
+      api_signature = gateway_sts["api_signature"]["value"]
+    email = gateway_sts["email"]["value"]
     if test_mode == "yes": mode = "sandbox"
     else: mode = "live"
     # checkout_details = self.callPaypalNVPGetCheckoutDetail(mode, api_username, api_password, api_signature, token)

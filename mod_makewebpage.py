@@ -133,10 +133,12 @@ class Mwp:
     assert paymenttxn is not None
     assert shopcart is not None
     assert wcorder is not None
+    user_id = paymenttxn["user_id"]
+    fb_page_id = paymenttxn["fb_page_id"]
     cart_str = mod_misc.dictToJsonStr(shopcart)
     paymenttxn_str = mod_misc.dictToJsonStr(paymenttxn)
     wcorder_str = mod_misc.dictToJsonStr(wcorder)
-    return render_template("orderReceived.html", shopcart=cart_str, paymenttxn=paymenttxn_str, wcorder=wcorder_str)
+    return render_template("orderReceived.html", userId=user_id, recipientId=fb_page_id, shopcart=cart_str, paymenttxn=paymenttxn_str, wcorder=wcorder_str)
 
   def doPaymentFailure(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")

@@ -586,7 +586,7 @@ class WcBot:
     out_msg += "Address: " + wcorder["shipping"]["address_1"] + " " + wcorder["shipping"]["address_2"] + wcorder["shipping"]["city"] + " " + wcorder["shipping"]["state"] + wcorder["shipping"]["country"] + CR
     out_msg += "Shipping method:" + CR
     for shipline in wcorder["shipping_lines"]:
-      out_msg += "  " + shipline["method_title"] + " (" + shipline["total"] + ")" + CR
+      out_msg += "  " + shipline["method_title"] + ": " + shipline["total"] + CR
     mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
     return True
 
@@ -709,3 +709,15 @@ class WcBot:
         "payload": "{0}_{1}".format(payload_prefix, page_no + 1)
       })
     return results
+
+  def doOrderReceived(self, user_id, fb_page_id, order_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(user_id, str)
+    assert isinstance(fb_page_id, str)
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientByFbPageId(fb_page_id)
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    msg = "Thank you! I noticed that you've placed an order. Below is the order details:"
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, msg)
+    self.doOrderDetails(client_rec, user_id, order_id)
+    return True

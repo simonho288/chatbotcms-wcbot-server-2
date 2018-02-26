@@ -2,6 +2,8 @@
 {% block body %}
 <body>
   <script>
+    window._userId = "{{ userId }}"
+    window._recipientId = "{{ recipientId }}"
     window._paymentTxn = util.decodeJSON("{{ paymenttxn }}")
     window._shoppingCart = util.decodeJSON("{{ shopcart }}")
     window._wcOrder = util.decodeJSON("{{ wcorder }}")

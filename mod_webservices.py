@@ -51,6 +51,8 @@ class Shopcart:
       return self.doUpsertClient(request)
     elif name == "init_msgr_profile":
       return self.doInitMsgrProfile(request)
+    elif name == "send_user_directmsg":
+      return self.doSendUserDirectMsg(request)
     else:
       raise Exception("Unhandled service: " + name)
 
@@ -252,3 +254,35 @@ class Shopcart:
     resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
     return resp
 
+  def doSendUserDirectMsg(self, request):
+    """
+    Directly send text message to specify user
+    To invoke in Javascript:
+      $.ajax({
+        type: 'POST',
+        url: '/ws/send_user_directmsg',
+        data: JSON.stringify({
+          user_id: _userId,
+          recipient_id: _recipientId,
+          msg: 'Hello, world...'
+        }),
+        contentType: 'application/json'
+      })
+    """
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    # post_data = request.form.to_dict()
+    assert request.json is not None
+    post_data = request.json
+    assert isinstance(post_data["user_id"], str)
+    assert isinstance(post_data["recipient_id"], str)
+    assert isinstance(post_data["msg"], str)
+    user_id = post_data["user_id"]
+    fb_page_id = post_data["recipient_id"]
+    msg = post_data["msg"]
+    # Retreive client record
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientByFbPageId(fb_page_id)
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, msg)
+    resp = make_response("ok", 200)
+    return resp

@@ -22,50 +22,50 @@ $(document).ready(function () {
   // })
 })
 
-function LoadPayment() {
-  console.log('LoadPayment()')
-  console.assert(window._paymentId)
+// function LoadPayment() {
+//   console.log('LoadPayment()')
+//   console.assert(window._paymentId)
 
-  return $.ajax({
-    type: 'GET',
-    url: 'db_loadpaymenttxn',
-    data: {
-      pid: window._paymentId
-    }
-  })
-}
+//   return $.ajax({
+//     type: 'GET',
+//     url: 'db_loadpaymenttxn',
+//     data: {
+//       pid: window._paymentId
+//     }
+//   })
+// }
 
-function LoadShoppingCart(userId, recipientId) {
-  console.log('LoadShoppingCart()')
-  console.assert(userId)
-  console.assert(recipientId)
+// function LoadShoppingCart(userId, recipientId) {
+//   console.log('LoadShoppingCart()')
+//   console.assert(userId)
+//   console.assert(recipientId)
 
-  return $.ajax({
-    method: 'GET',
-    url: 'ws/db_loadcart',
-    data: {
-      uid: userId,
-      rid: recipientId
-    }
-  })
-}
+//   return $.ajax({
+//     method: 'GET',
+//     url: 'ws/db_loadcart',
+//     data: {
+//       uid: userId,
+//       rid: recipientId
+//     }
+//   })
+// }
 
-function LoadWcOrder() {
-  console.log('LoadWcOrder()')
-  console.assert(window._paymentTxn.userId)
-  console.assert(window._paymentTxn.recipientId)
-  console.assert(window._paymentTxn.orderId)
+// function LoadWcOrder() {
+//   console.log('LoadWcOrder()')
+//   console.assert(window._paymentTxn.userId)
+//   console.assert(window._paymentTxn.recipientId)
+//   console.assert(window._paymentTxn.orderId)
 
-  return $.ajax({
-    method: 'GET',
-    url: 'get_wc_order',
-    data: {
-      uid: window._paymentTxn.userId,
-      rid: window._paymentTxn.recipientId,
-      oid: window._paymentTxn.orderId
-    }
-  })
-}
+//   return $.ajax({
+//     method: 'GET',
+//     url: 'get_wc_order',
+//     data: {
+//       uid: window._paymentTxn.userId,
+//       rid: window._paymentTxn.recipientId,
+//       oid: window._paymentTxn.orderId
+//     }
+//   })
+// }
 
 function RenderScreen() {
   console.log('RenderScreen()')

@@ -189,6 +189,7 @@ function MethodsToSelectOptionsMarkup(zoneName, methods) {
   for (var i = 0; i < methods.length; ++i) {
     var method = methods[i]
     var cost, title
+    var isSupported = true
     title = zoneName + ': '
     switch (method.method_id) {
       case 'free_shipping':
@@ -211,6 +212,10 @@ function MethodsToSelectOptionsMarkup(zoneName, methods) {
         cost = ParseAndCalcShipCost(method.settings.cost.value)
         title += method.method_title + ': Fee ' + util.ParseCurrencyToDisp(crySts, cost)
         break
+      case 'wc_services_usps':
+        // Currently USPS (WooCommerce Services) is not supported
+        isSupported = false
+        break;
       default:
         $.alert({
           type: 'red',
@@ -219,12 +224,14 @@ function MethodsToSelectOptionsMarkup(zoneName, methods) {
           content: 'Unhandled shipping method: ' + method.method_id
         })
     }
-    markup += '<option '
-    markup += 'value="' + method.method_id + '"'
-    markup += 'data-title="' + method.method_title + '"'
-    markup += 'data-cost="' + cost + '">'
-    markup += title
-    markup += '</option>'
+    if (isSupported) {
+      markup += '<option '
+      markup += 'value="' + method.method_id + '"'
+      markup += 'data-title="' + method.method_title + '"'
+      markup += 'data-cost="' + cost + '">'
+      markup += title
+      markup += '</option>'
+    }
   }
 
   return markup

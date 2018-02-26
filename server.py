@@ -13,6 +13,7 @@ import mod_makewebpage
 import mod_webservices
 import mod_woocommerce
 import mod_payment
+import mod_wcbot
 import mod_global
 
 from flask import Flask, make_response, Response, request, jsonify, render_template, send_from_directory, redirect
@@ -160,7 +161,10 @@ def paymentReturn():
   m_pg = mod_payment.Paygate()
   result = m_pg.handleReturn(request)
   m_mwp = mod_makewebpage.Mwp()
-  return m_mwp.renderOrderReceivedHtml(request, result["paymenttxn"], result["shopcart"], result["wcorder"])
+  paymenttxn = result["paymenttxn"]
+  m_wcbot = mod_wcbot.WcBot()
+  m_wcbot.doOrderReceived(paymenttxn["user_id"], paymenttxn["fb_page_id"], paymenttxn["order_id"])
+  return m_mwp.renderOrderReceivedHtml(request, paymenttxn, result["shopcart"], result["wcorder"])
 
 @app.route("/payment_cancel", methods=["GET"])
 def paymentCancel():
