@@ -83,6 +83,11 @@ class WcBot:
         return self.doShowStoreName(client_rec, m_nls, user_id)
       elif reply == "_jsShowStoreUrl_":
         return self.doShowStoreUrl(client_rec, m_nls, user_id)
+      elif reply == "_jsShowWcbotProductInfo_":
+        return self.doShowWcbotProductInfo(client_rec, m_nls, user_id)
+      else:
+        if self.doAnswerQuickQuestion(client_rec, m_nls, user_id, reply):
+          return True
     except Exception as ex:
       # the problem maybe: woocommerce connection problem, php not started
       traceback.print_exc(file=sys.stdout)
@@ -667,6 +672,42 @@ class WcBot:
     }]
     mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
     return True
+
+  def doShowWcbotProductInfo(self, client_rec, m_nls, user_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert m_nls is not None
+    assert isinstance(user_id, str)
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    site_url = "https://chatbotcms.com/wcbot.html"
+    out_msg = "Info of this chatbot: " + site_url
+    buttons = [{
+      "title": 'Browse it now',
+      "type": "web_url",
+      "url": site_url
+    }]
+    mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
+    return True
+  
+  def doAnswerQuickQuestion(self, client_rec, m_nls, user_id, question):
+    """
+    This is to handle general answer to quick questions. It will check the question inside the questions list. If found, it will send the anwser as a text message to the user.
+    """
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert m_nls is not None
+    assert isinstance(user_id, str)
+    assert isinstance(question, str)
+    questions = {
+      "_jsShowWcbotHowToPayInfo_": "You can say 'view shopping cart'. Then I will tell you more :)",
+    }
+    if question in questions:
+      acc_tok = client_rec["facebook_page"]["access_token"]
+      out_msg = questions[question]
+      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+      return True
+    else:
+      return False
 
   def productsToMessengerImages(self, records, payload_prefix, page_no):
     """

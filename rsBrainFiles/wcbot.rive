@@ -35,6 +35,12 @@ Rivescript brain file for cms_wc
 + woocommerce_show_store_url
 - _jsShowStoreUrl_
 
++ wcbot_show_product_info
+- _jsShowWcbotProductInfo_
+
++ wcbot_show_howtopay_info
+- _jsShowWcbotHowToPayInfo_
+
 // ----------------------------------------------------------------------
 // All its redirect
 
@@ -81,3 +87,9 @@ Rivescript brain file for cms_wc
 - <call>rs_list_product_price_range <star1> <star2></call>
 + [*] price range * [and] *
 - <call>rs_list_product_price_range <star1> <star2></call>
+
++ [*] chatbot [*]
+@ wcbot_show_product_info
+
++ [*] how [*] pay
+@ wcbot_show_howtopay_info
