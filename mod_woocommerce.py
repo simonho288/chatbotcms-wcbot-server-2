@@ -243,6 +243,13 @@ class Wc:
       })
     return result
 
+  def getShippingMethods(self):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    result = []
+    r = self.wcapi.get("shipping_methods")
+    ship_methods = json.loads(mod_misc.wcCorrectResp(r.text))
+    return ship_methods
+
   def updateOrder(self, order_id, update_props):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert order_id is not None

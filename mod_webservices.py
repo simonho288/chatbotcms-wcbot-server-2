@@ -53,6 +53,8 @@ class Shopcart:
       return self.doInitMsgrProfile(request)
     elif name == "send_user_directmsg":
       return self.doSendUserDirectMsg(request)
+    elif name == "server_check":
+      return self.doServerSideCheck(request)
     else:
       raise Exception("Unhandled service: " + name)
 
@@ -285,4 +287,33 @@ class Shopcart:
     acc_tok = client_rec["facebook_page"]["access_token"]
     mod_messenger.sendMessengerTextMessage(acc_tok, user_id, msg)
     resp = make_response("ok", 200)
+    return resp
+
+  def doServerSideCheck(self, request):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert request.form is not None
+    post_data = request.form.to_dict()
+    assert isinstance(post_data["client_id"], str)
+    client_id = post_data["client_id"]
+    print("client_id: " + client_id)
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientById(client_id)
+    wc_rec = client_rec["woocommerce"]
+    m_wc = mod_woocommerce.Wc(wc_rec["url"], wc_rec["consumer_key"], wc_rec["consumer_secret"])
+    shipping_methods = m_wc.getShippingMethods()
+    result = []
+    for method in shipping_methods:
+      if method["id"] == "wc_services_usps":
+        result.append({
+          "type": "warn",
+          "message": "Shipping method 'USPS (WooCommerce Services)' is not support. It will not appears in chatbot built-in shopping cart."
+        })
+    # Example to add an error message
+    # result.append({
+    #   "type": "error",
+    #   "message": "An error message"
+    # })
+    resp = make_response(jsonify(result), 200)
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
     return resp
