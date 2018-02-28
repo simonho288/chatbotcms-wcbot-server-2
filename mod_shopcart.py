@@ -42,7 +42,7 @@ class ShoppingCart:
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(self.user_id, str)
     assert isinstance(self.fb_page_id, str)
-    if "ship_info" in self.doc:
+    if "ship_info" in self.doc and self.doc["ship_info"] != None:
       self.doc["ship_info"]["cost"] = str(self.doc["ship_info"]["cost"])
     self.m_db.upsertShopcart(self.user_id, self.fb_page_id, self.doc)
 
