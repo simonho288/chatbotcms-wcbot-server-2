@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "ChatbotCMS WcBot Python Version",
   "scripts": {
-    "start": "sls wsgi serve -p 5000",
+    "start": "DEBUG_MODE=1 sls wsgi serve -p 5000",
     "createdb": "python -c 'from mod_database import __createDynamoTables; __createDynamoTables()'",
     "convertdb": "python -c 'from mod_database import __convertTable_Clients; __convertTable_Clients()'"
   },

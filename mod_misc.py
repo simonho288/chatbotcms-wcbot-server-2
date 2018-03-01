@@ -9,6 +9,8 @@ import datetime
 import random
 import time
 
+import mod_global
+
 from babel.numbers import format_number, format_decimal, format_percent, format_currency
 from boltons.iterutils import remap
 
@@ -27,7 +29,7 @@ class DecimalEncoder(json.JSONEncoder):
 def initLogger(name):
   logger = logging.getLogger(name)
   # logger.setLevel(logging.DEBUG)
-  if os.environ["DEBUG_MODE"] == "1":
+  if mod_global.IS_DEBUG:
     logger.setLevel(logging.DEBUG)
   else:
     logger.setLevel(logging.WARN)
@@ -100,7 +102,8 @@ def wcCorrectResp(jstr):
   """
   Elinamte all console.log which generate in the WcBot plugin development mode from WooCommerce rest api.
   """
-  if os.environ["DEBUG_MODE"] == "1":
+  import mod_global
+  if mod_global.IS_DEBUG:
     pos = jstr.rfind("</script>")
     if pos >= 0:
       return jstr[pos + 9:]

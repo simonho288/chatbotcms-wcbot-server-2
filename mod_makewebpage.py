@@ -31,10 +31,20 @@ from html import escape
 
 logger = mod_misc.initLogger(__name__)
 
+# Determine the domain origin of JS depends on running mode
+js_origin = ""
+
 class Mwp:
+  
   def __init__(self):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-
+    # This is to determine the domain origin of JS files. It uses localhost:5000 for debugging
+    global js_origin
+    if mod_global.IS_DEBUG:
+      js_origin = "http://localhost:5000"
+    else:
+      js_origin = "https://s3.amazonaws.com/lambda-statics-us/wcbot"
+  
   def mapHandler(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert request is not None
@@ -53,33 +63,8 @@ class Mwp:
       return self.doOrderReview(request)
     elif page == "orderPayment":
       return self.doOrderPayment(request)
-    # elif page == "orderReceived":
-    #   rst = self.changeOrderStatus(request.args.get("pid"))
-    #   return self.renderOrderReceivedHtml(request, rst["paymenttxn"], rst["shopcart"], rst["wcorder"])
     else:
       raise Exception("Unhandled page: " + page)
-
-  # def changeOrderStatus(self, payment_id):
-  #   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-  #   assert isinstance(payment_id, str)
-  #   m_db = mod_database.Mdb()
-  #   payment_rec = m_db.findPaymentTxnById(payment_id)
-  #   # result_txn = self.callPaypalNVPGetCompleteTxn(mode, api_username, api_password, api_signature, token, payer_id, payment_rec["total"], payment_rec["currency"])
-  #   # m_db.setPaymentGatewayTxn(payment_id, result_txn)
-  #   client_rec = m_db.findClientByFbPageId(payment_rec["fb_page_id"])
-  #   m_cart = mod_shopcart.ShoppingCart(payment_rec["user_id"], payment_rec["fb_page_id"])
-  #   m_cart.loadFromDatabase()
-  #   orderpool_id = payment_rec["order_id"]
-  #   orderpool_rec = m_db.findOrderPoolById(orderpool_id)
-  #   wcorder_id = str(orderpool_rec["order_id"])
-  #   wc_rec = client_rec["woocommerce"]
-  #   m_wc = mod_woocommerce.Wc(wc_rec["url"], wc_rec["consumer_key"], wc_rec["consumer_secret"])
-  #   wcorder = m_wc.getOrder(wcorder_id)
-  #   return {
-  #     "paymenttxn": payment_rec,
-  #     "shopcart": m_cart.getRecord(),
-  #     "wcorder": m_wc.getOrder(wcorder_id)
-  #   }
 
   def doShoppingCart(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -121,7 +106,7 @@ class Mwp:
       "currency": settingCurrency
     })
     cart_str = mod_misc.dictToJsonStr(cart.getRecord())
-    return render_template("shoppingCart.html", userId=user_id, recipientId=fb_page_id, orderId=order_id, cart=cart_str)
+    return render_template("shoppingCart.html", jsOrigin=js_origin, userId=user_id, recipientId=fb_page_id, orderId=order_id, cart=cart_str)
 
   def doCheckout(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -138,7 +123,7 @@ class Mwp:
     cart_str = mod_misc.dictToJsonStr(shopcart)
     paymenttxn_str = mod_misc.dictToJsonStr(paymenttxn)
     wcorder_str = mod_misc.dictToJsonStr(wcorder)
-    return render_template("orderReceived.html", userId=user_id, recipientId=fb_page_id, shopcart=cart_str, paymenttxn=paymenttxn_str, wcorder=wcorder_str)
+    return render_template("orderReceived.html", jsOrigin=js_origin, userId=user_id, recipientId=fb_page_id, shopcart=cart_str, paymenttxn=paymenttxn_str, wcorder=wcorder_str)
 
   def doPaymentFailure(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -158,7 +143,7 @@ class Mwp:
     m_cart.loadFromDatabase()
     cart_rec = m_cart.getRecord()
     cart_str = mod_misc.dictToJsonStr(cart_rec)
-    return render_template("orderInfoInput.html", userId=user_id, recipientId=fb_page_id, orderId=order_id, cart=cart_str)
+    return render_template("orderInfoInput.html", jsOrigin=js_origin, userId=user_id, recipientId=fb_page_id, orderId=order_id, cart=cart_str)
 
   def delWcOrderShipping(self, wcshippings):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -202,7 +187,7 @@ class Mwp:
     wcshippings = m_wc.getShippingSettings()
     self.delWcOrderShipping(wcshippings)
     wcshipping_str = mod_misc.dictToJsonStr(wcshippings)
-    return render_template("orderShipping.html", userId=user_id, recipientId=fb_page_id, orderId=order_pool["id"], shopcart=cart_str, wcorder=wcorder_str, wcshipping=wcshipping_str)
+    return render_template("orderShipping.html", jsOrigin=js_origin, userId=user_id, recipientId=fb_page_id, orderId=order_pool["id"], shopcart=cart_str, wcorder=wcorder_str, wcshipping=wcshipping_str)
 
   def doOrderReview(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -223,7 +208,7 @@ class Mwp:
     orderpool_rec = m_db.findOrderPoolById(order_id)["doc"]
     wcorder = m_wc.getOrder(orderpool_rec["order_id"])
     wcorder_str = mod_misc.dictToJsonStr(wcorder)
-    return render_template("orderReview.html", userId=user_id, recipientId=fb_page_id, orderId=order_id, shopcart=cart_str, wcorder=wcorder_str)
+    return render_template("orderReview.html", jsOrigin=js_origin, userId=user_id, recipientId=fb_page_id, orderId=order_id, shopcart=cart_str, wcorder=wcorder_str)
 
   def doOrderPayment(self, request):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -265,7 +250,7 @@ class Mwp:
       braintree_mode = braintree_rst["mode"]
       braintree_token = braintree_rst["clientToken"]
     stripkey = m_pg.getStripePublishKey()
-    return render_template("orderPayment.html", userId=user_id, recipientId=fb_page_id, orderId=order_id, stripePublishKey=stripkey, braintreeClientToken=braintree_token, braintreeMode=braintree_mode, shopcart=cart_str, wcorder=wcorder_str, wcpaygates=wcpaygates_str)
+    return render_template("orderPayment.html", jsOrigin=js_origin, userId=user_id, recipientId=fb_page_id, orderId=order_id, stripePublishKey=stripkey, braintreeClientToken=braintree_token, braintreeMode=braintree_mode, shopcart=cart_str, wcorder=wcorder_str, wcpaygates=wcpaygates_str)
 
   def doOrderCancelled(self, request, user_id, fb_page_id, order_id):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")

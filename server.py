@@ -22,8 +22,6 @@ from inspect import currentframe, getframeinfo
 logger = mod_misc.initLogger(__name__)
 app = Flask(__name__, static_folder="static", static_url_path="/")
 # app = Flask(__name__)
-if os.environ["DEBUG_MODE"] == "1":
-  app.debug = True
 
 @app.route("/")
 def index():
@@ -33,19 +31,15 @@ def index():
   return make_response("WcBot is running\n", 200)
 
 # static files
+@app.route("/static/<path:path>")
+def send_static(path):
+  return send_from_directory("static", path)
 @app.route("/js/<path:path>")
 def send_js(path):
-  # return send_from_directory("static/js", path)
-  path = "static/js/" + path
-  with open(path, "r") as f:
-    data = f.read()
-    f.close()
-    return Response(data, mimetype="application/javascript")
-
-# static files
+  return send_from_directory("shopping-cart-src/js", path)
 @app.route("/css/<path:path>")
 def send_css(path):
-  return send_from_directory("static/css", path)
+  return send_from_directory("shopping-cart/css", path)
 
 @app.route("/ping", methods=["GET"])
 def ping():
@@ -181,5 +175,5 @@ def not_found(error):
 
 if __name__ == "__main__":
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-  app.run(debug=app.debug, port=443, host="127.0.0.1")
+  app.run(debug=mod_global.IS_DEBUG, port=443, host="127.0.0.1")
   # app.run(debug=app.debug, port=5000, host="127.0.0.1")

@@ -31,7 +31,6 @@ provider:
   environment:
     FLASK_APP: "${self:custom.secrets.FLASK_APP}"
     FLASK_DEBUG: "${self:custom.secrets.FLASK_DEBUG}"
-    DEBUG_MODE: "${self:custom.secrets.DEBUG_MODE}"
     AMZACCESSKEY: "${self:custom.secrets.AWS_ACCESS_KEY_ID}"
     AMZACCESSSECRET: "${self:custom.secrets.AWS_SECRET_ACCESS_KEY}"
     AMZREGION: "${self:custom.secrets.AWS_REGION}"
