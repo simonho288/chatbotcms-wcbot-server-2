@@ -391,6 +391,16 @@ class WcBot:
         out_msg = out_msg[:len(out_msg) - 2]
       mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
     time.sleep(1)
+    if product["manage_stock"] == True:
+      stock = product["stock_quantity"]
+      in_stock = product["in_stock"]
+      out_msg = "Stock: "
+      if in_stock:
+        out_msg += str(stock) + " in stock"
+      else:
+        out_msg += "Out of stock"
+      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+      time.sleep(1)
     buttons = [{
       "title": 'View on web',
       "type": "web_url",
@@ -419,25 +429,29 @@ class WcBot:
     if self.raw_gensts is None: # needs for formatting currency
       self.raw_gensts = self.m_woocom.getGeneralSetting()
       self.parseGeneralSetting(self.raw_gensts)
-    product = self.m_woocom.getProductDetail(product_id)
     acc_tok = client_rec["facebook_page"]["access_token"]
-    m_shopcart = mod_shopcart.ShoppingCart(user_id, client_rec["fb_page_id"])
-    m_shopcart.loadFromDatabase()
-    m_shopcart.appendProduct(product)
-    m_shopcart.saveToDatabase()
-    shopcart_url = mod_global.SERVER_URL
-    if not shopcart_url.endswith("/"): shopcart_url += "/"
-    btns = [{
-      "title": "View Cart",
-      "type": "postback",
-      "payload": PAYLOAD_VIEWCART
-    }, {
-      "title": "Check Out",
-      "type": "web_url",
-      "url": shopcart_url + "mwp?page=shopCart&uid={0}&rid={1}".format(user_id, client_rec["fb_page_id"])
-    }]
-    out_msg = "Item added to shopping card."
-    mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, btns)
+    product = self.m_woocom.getProductDetail(product_id)
+    if product["in_stock"] == False:
+      out_msg = "Sorry! " + product["name"] + " is out of stock currently :(. Please choose another product."
+      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+    else:
+      m_shopcart = mod_shopcart.ShoppingCart(user_id, client_rec["fb_page_id"])
+      m_shopcart.loadFromDatabase()
+      m_shopcart.appendProduct(product)
+      m_shopcart.saveToDatabase()
+      shopcart_url = mod_global.SERVER_URL
+      if not shopcart_url.endswith("/"): shopcart_url += "/"
+      btns = [{
+        "title": "View Cart",
+        "type": "postback",
+        "payload": PAYLOAD_VIEWCART
+      }, {
+        "title": "Check Out",
+        "type": "web_url",
+        "url": shopcart_url + "mwp?page=shopCart&uid={0}&rid={1}".format(user_id, client_rec["fb_page_id"])
+      }]
+      out_msg = product["name"] + " added to shopping cart."
+      mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, btns)
     return True
 
   def doViewCart(self, client_rec, m_nls, user_id):
