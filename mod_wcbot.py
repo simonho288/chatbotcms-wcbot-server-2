@@ -67,7 +67,9 @@ class WcBot:
     assert isinstance(user_id, str)
     acc_tok = client_rec["facebook_page"]["access_token"]
     try:
-      if reply == "_jsShowQuickHelp_":
+      if reply == "_jsShowVersion_":
+        return self.doShowVersion(client_rec, m_nls, user_id)
+      elif reply == "_jsShowQuickHelp_":
         return self.doQuickHelp(client_rec, m_nls, user_id)
       elif reply == "_jsListProducts_":
         return self.doListProducts(client_rec, m_nls, user_id)
@@ -242,6 +244,18 @@ class WcBot:
       "decimal_sep": dec_sep["value"],
       "num_decimal": num_dec["value"]
     }
+
+  def doShowVersion(self, client_rec, m_nls, user_id):
+    """
+    Show internal version number
+    """
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert m_nls is not None
+    assert isinstance(user_id, str)
+    msg = mod_global.APP_NAME + " ver: " + mod_global.SERVER_VERSION
+    mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
+    return True
 
   def doQuickHelp(self, client_rec, m_nls, user_id):
     """
