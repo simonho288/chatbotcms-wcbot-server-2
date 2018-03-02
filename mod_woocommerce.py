@@ -294,6 +294,29 @@ class Wc:
       logger.error(traceback.format_exc())
       raise exp
 
+  def getProductStock(self, product_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(product_id, str)
+    url = "products/" + product_id
+    try:
+      r = self.wcapi.get(url)
+      return json.loads(mod_misc.wcCorrectResp(r.text))
+    except Exception as exp:
+      logger.error(traceback.format_exc())
+      raise exp
+
+  def updateProductBatch(self, cmd_obj):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert cmd_obj is not None
+    assert cmd_obj["update"] is not None
+    url = "products/batch"
+    try:
+      r = self.wcapi.post(url, cmd_obj)
+      return json.loads(mod_misc.wcCorrectResp(r.text))
+    except Exception as exp:
+      logger.error(traceback.format_exc())
+      raise exp
+
 def handleAuthenicate(params):
   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
   this_host = "https://" + SERVER_URL

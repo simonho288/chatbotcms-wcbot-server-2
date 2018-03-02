@@ -352,6 +352,10 @@ class Paygate(object):
     m_db = mod_database.Mdb()
     payment_id = request.values["pid"]
     payment_rec = m_db.findPaymentTxnById(payment_id)["doc"]
+    if payment_rec["status"] != "pending": # prevent double entry
+      return None
+    payment_rec["status"] = "paid" # update the payment status to "paid"
+    m_db.replacePaymentRecord(payment_id, payment_rec)
     payment_method = payment_rec["payment_method"]
     if payment_method == "paypal":
       return self.handlePaypalReturn(payment_id, request, m_db, payment_rec)
@@ -404,6 +408,7 @@ class Paygate(object):
     wcorder = m_wc.getOrder(wcorder_id)
     self.updateOrderPool(True, m_db, orderpool_id, payment_id, payment_rec)
     self.updateWcOrder(True, wcorder_id, client_rec, payment_rec, result_txn)
+    self.updateWcProductStocks(m_wc, wcorder)
     return {
       "paymenttxn": payment_rec,
       "shopcart": m_cart.getRecord(),
@@ -429,6 +434,7 @@ class Paygate(object):
     wcorder = m_wc.getOrder(wcorder_id)
     self.updateOrderPool(True, m_db, orderpool_id, payment_id, payment_rec)
     self.updateWcOrder(True, wcorder_id, client_rec, payment_rec, gateway_txn)
+    self.updateWcProductStocks(m_wc, wcorder)
     return {
       "paymenttxn": payment_rec,
       "shopcart": m_cart.getRecord(),
@@ -454,6 +460,7 @@ class Paygate(object):
     wcorder = m_wc.getOrder(wcorder_id)
     self.updateOrderPool(True, m_db, orderpool_id, payment_id, payment_rec)
     self.updateWcOrder(True, wcorder_id, client_rec, payment_rec, gateway_txn)
+    self.updateWcProductStocks(m_wc, wcorder)
     return {
       "paymenttxn": payment_rec,
       "shopcart": m_cart.getRecord(),
@@ -482,6 +489,8 @@ class Paygate(object):
     wcorder = m_wc.getOrder(wcorder_id)
     self.updateOrderPool(False, m_db, orderpool_id, payment_id, payment_rec)
     self.updateWcOrder(False, wcorder_id, client_rec, payment_rec)
+    # NOTES: Don't update stock level for these kinds of payment
+    # self.updateWcProductStocks(m_wc, wcorder)
     return {
       "paymenttxn": payment_rec,
       "shopcart": m_cart.getRecord(),
@@ -610,3 +619,22 @@ class Paygate(object):
       props["date_paid"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
       props["date_paid_gmt"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     m_wc.updateOrder(wcorder_id, props)
+
+  def updateWcProductStocks(self, m_wc, wcorder):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert wcorder is not None
+    update_cmd = [] # batch of product to be updated the stock
+    for item in wcorder["line_items"]:
+      product_id = item["product_id"]
+      qty = item["quantity"]
+      # Is it the stock managing?
+      product = m_wc.getProductDetail(str(product_id))
+      if product["manage_stock"]:
+        new_qty = product["stock_quantity"] - qty
+        update_cmd.append({
+          "id": product_id,
+          "stock_quantity": new_qty,
+          "in_stock": new_qty > 0
+        })
+    cmd_obj = { "update": update_cmd }
+    m_wc.updateProductBatch(cmd_obj)

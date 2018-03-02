@@ -55,6 +55,8 @@ class Shopcart:
       return self.doSendUserDirectMsg(request)
     elif name == "server_check":
       return self.doServerSideCheck(request)
+    elif name == "get_item_stock":
+      return self.doGetItemStock(request)
     else:
       raise Exception("Unhandled service: " + name)
 
@@ -316,4 +318,23 @@ class Shopcart:
     resp = make_response(jsonify(result), 200)
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
+    return resp
+
+  def doGetItemStock(self, request):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(request.args["item_id"], str)
+    assert isinstance(request.args["fb_page_id"], str)
+    fb_page_id = request.args["fb_page_id"]
+    item_id = request.args["item_id"]
+    m_db = mod_database.Mdb()
+    client_rec = m_db.findClientByFbPageId(fb_page_id)
+    wc_rec = client_rec["woocommerce"]
+    m_wc = mod_woocommerce.Wc(wc_rec["url"], wc_rec["consumer_key"], wc_rec["consumer_secret"])
+    stock = m_wc.getProductStock(item_id)
+    result = {
+      "manage_stock": stock["manage_stock"],
+      "stock_quantity": stock["stock_quantity"],
+      "in_stock": stock["in_stock"]
+    }
+    resp = make_response(jsonify(result), 200)
     return resp

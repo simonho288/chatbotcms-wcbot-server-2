@@ -68,7 +68,7 @@ class ShoppingCart:
       cart_items = self.doc["cart_items"]
     for item in cart_items:
       if item["product_id"] == product["id"]:
-        item["qty"] += 1
+        item["qty"] = int(item["qty"]) + 1
         return
     image = ""
     if len(product["images"]) > 0:

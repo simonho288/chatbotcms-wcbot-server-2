@@ -112,7 +112,25 @@ function SaveCart(callback) {
   })
 }
 
+function getItemStock(itemId) {
+  console.log('checkItemStock()')
+  console.assert(_recipientId != null)
+  
+  return $.ajax({
+    type: 'GET',
+    url: 'ws/get_item_stock',
+    data: {
+      fb_page_id: _recipientId,
+      item_id: itemId
+    },
+    contentType: 'application/json',
+    dataType: 'json'
+  })
+}
+
 function findItemInCart(itemId) {
+  console.log('findItemInCart()')
+
   for (var i = 0; i < window._shoppingCart.cart_items.length; ++i) {
     var item = window._shoppingCart.cart_items[i]
     if (item.product_id == itemId) {
@@ -220,14 +238,46 @@ function RenderCartAndSetupEvent() {
     var qty = evt.target.value
     var itemId = evt.target.id
     var item = findItemInCart(itemId)
-    item.qty = qty
-    var total = qty * item.unit_price
+    var $this = $(this)
 
-    var disp = util.ParseCurrencyToDisp(window._shoppingCart.server_settings.currency, total, false)
-    var markup = 'Sub-total: ' + disp
-    $(evt.target).closest('.card').find('.sub_total').html(markup)
-    SaveCart()
-    CalculateTotal()
+    getItemStock(itemId).done(function(result) {
+      var in_stock = !result.manage_stock
+      if (result.manage_stock) {
+        if (result.in_stock && result.stock_quantity >= qty) {
+          in_stock = true
+        }
+      }
+      if (in_stock) {
+        // Re-calculate the sub-total
+        item.qty = qty
+        var total = qty * item.unit_price
+        var disp = util.ParseCurrencyToDisp(window._shoppingCart.server_settings.currency, total, false)
+        var markup = 'Sub-total: ' + disp
+        $(evt.target).closest('.card').find('.sub_total').html(markup)
+        SaveCart()
+        CalculateTotal()
+        return true
+      } else {
+        // revert the quantity
+        $.alert({
+          type: 'red',
+          useBootstrap: false,
+          title: 'Sorry! Insufficient Stock',
+          content: 'We\'ve stock on hand: ' + result.stock_quantity,
+          onClose: function() {
+            $this.val(item.qty)
+          }
+        })
+        return false
+      }
+    }).fail(function(err, result, xhr) {
+      $.alert({
+        type: 'red',
+        useBootstrap: false,
+        title: err,
+        content: xhr.responseText
+      })
+    })
   })
   
   $('.btn_remove').off().on('click', function(evt) {

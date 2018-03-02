@@ -154,11 +154,14 @@ def paymentReturn():
   mod_global.server_entry(request)
   m_pg = mod_payment.Paygate()
   result = m_pg.handleReturn(request)
-  m_mwp = mod_makewebpage.Mwp()
-  paymenttxn = result["paymenttxn"]
-  m_wcbot = mod_wcbot.WcBot()
-  m_wcbot.doOrderReceived(paymenttxn["user_id"], paymenttxn["fb_page_id"], paymenttxn["order_id"])
-  return m_mwp.renderOrderReceivedHtml(request, paymenttxn, result["shopcart"], result["wcorder"])
+  if result == None: # Prevent double entry
+    return make_response("ok")
+  else:
+    m_mwp = mod_makewebpage.Mwp()
+    paymenttxn = result["paymenttxn"]
+    m_wcbot = mod_wcbot.WcBot()
+    m_wcbot.doOrderReceived(paymenttxn["user_id"], paymenttxn["fb_page_id"], paymenttxn["order_id"])
+    return m_mwp.renderOrderReceivedHtml(request, paymenttxn, result["shopcart"], result["wcorder"])
 
 @app.route("/payment_cancel", methods=["GET"])
 def paymentCancel():
