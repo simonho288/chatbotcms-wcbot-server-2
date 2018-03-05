@@ -623,12 +623,17 @@ class Paygate(object):
   def updateWcProductStocks(self, m_wc, wcorder):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert wcorder is not None
+    # get batch of products by product_ids in the order
+    ids = []
+    for item in wcorder["line_items"]:
+      ids.append(str(item["product_id"]))
+    products = m_wc.getProductDetailByIds(ids)
     update_cmd = [] # batch of product to be updated the stock
     for item in wcorder["line_items"]:
       product_id = item["product_id"]
       qty = item["quantity"]
       # Is it the stock managing?
-      product = m_wc.getProductDetail(str(product_id))
+      product = next((elem for elem in products if elem["id"] == product_id), False)
       if product["manage_stock"]:
         new_qty = product["stock_quantity"] - qty
         update_cmd.append({
