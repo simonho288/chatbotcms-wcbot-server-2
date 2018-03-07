@@ -60,7 +60,7 @@ def wcGeneralSettingLookup(gSettings, sid):
   assert gSettings is not None
   assert isinstance(sid, str)
   for settings in gSettings:
-    if settings["id"] == sid:
+    if "id" in settings and settings["id"] == sid:
       return settings
   return None
 

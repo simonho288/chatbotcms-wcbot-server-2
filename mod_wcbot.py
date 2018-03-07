@@ -232,6 +232,8 @@ class WcBot:
     assert gen_sts is not None
 
     cur = mod_misc.wcGeneralSettingLookup(gen_sts, "woocommerce_currency")
+    if cur is None:
+      raise Exception("Can't retrieve WooCommerce settings. Is the REST API access authorized?")
     cur_pos = mod_misc.wcGeneralSettingLookup(gen_sts, "woocommerce_currency_pos")
     thou_sep = mod_misc.wcGeneralSettingLookup(gen_sts, "woocommerce_price_thousand_sep")
     dec_sep = mod_misc.wcGeneralSettingLookup(gen_sts, "woocommerce_price_decimal_sep")

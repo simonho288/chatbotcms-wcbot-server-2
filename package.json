@@ -17,7 +17,7 @@
     "gulp-uglify": "^3.0.0",
     "pump": "^2.0.1",
     "run-sequence": "^2.2.1",
-    "serverless-python-requirements": "^3.3.0",
+    "serverless-python-requirements": "^3.3.1",
     "serverless-wsgi": "^1.4.6",
     "yamljs": "^0.3.0"
   },
