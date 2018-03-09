@@ -41,9 +41,11 @@ PAYLOAD_PRODUCTS_PRICE_MIN = "PLPRODUCTSPRICEMIN"
 PAYLOAD_PRODUCTS_PRICE_MAX = "PLPRODUCTSPRICEMAX"
 PAYLOAD_ORDERDETAILS = "PLORDERDETAILS" # order_id
 PAYLOAD_QUICKHELP = "PLQUICKHELP"
+PAYLOAD_PRODUCT_VARIATION = "PLPRODUCTVAR"
 # Rivescript variable name
 RSVAR_CUR_PRODUCT = "wcCurrentProduct"
 RSVAR_FBUSER_PROFILE = "fbUserProfile"
+RSVAR_CUR_VAR_SELECTED = "wcCurVarSelected"
 CR = "\n"
 ITEMS_PER_PAGE = 10
 
@@ -70,15 +72,15 @@ class WcBot:
       if reply == "_jsShowVersion_":
         return self.doShowVersion(client_rec, m_nls, user_id)
       elif reply == "_jsShowQuickHelp_":
-        return self.doQuickHelp(client_rec, m_nls, user_id)
+        return self.PLQuickHelp(client_rec, m_nls, user_id)
       elif reply == "_jsListProducts_":
-        return self.doListProducts(client_rec, m_nls, user_id)
+        return self.PLListProducts(client_rec, m_nls, user_id)
       elif reply == "_jsListHotProducts_":
-        return self.doHotProducts(client_rec, m_nls, user_id, page_no=1)
+        return self.PLHotProducts(client_rec, m_nls, user_id, page_no=1)
       elif reply == "_jsListCategories_":
         return self.doListCategories(client_rec, m_nls, user_id, page_no=1)
       elif reply == "_jsViewCart_":
-        return self.doViewCart(client_rec, m_nls, user_id)
+        return self.PLViewCart(client_rec, m_nls, user_id)
       elif reply == "_jsListAllOrders_":
         return self.doListAllOrders(client_rec, m_nls, user_id)
       elif reply == "_jsShowStoreName_":
@@ -109,41 +111,48 @@ class WcBot:
     assert isinstance(user_id, str)
     payloads = payload.split("_")
     payload_cmd = payloads[0]
+    if self.m_woocom is None:
+      rec_wc = client_rec["woocommerce"]
+      self.m_woocom = mod_woocommerce.Wc(rec_wc["url"], rec_wc["consumer_key"], rec_wc["consumer_secret"])
     if payload_cmd == PAYLOAD_SHOWPRODUCT:
-      return self.doViewProductDetail(payloads[1], client_rec, m_nls, user_id)
+      return self.PLViewProductDetail(payloads[1], client_rec, m_nls, user_id)
     elif payload_cmd == PAYLOAD_ADDTOCART:
-      return self.doAddProductToCart(payloads[1], client_rec, m_nls, user_id)
+      return self.PLAddProductToCart(payloads[1], client_rec, m_nls, user_id)
     elif payload_cmd == PAYLOAD_LISTPRODUCTS:
       page_no = 1
       if len(payloads) > 1: page_no = int(payloads[1])
       catg_id = None
       if len(payloads) > 2: catg_id = payloads[2]
-      return self.doListProducts(client_rec, m_nls, user_id, page_no=page_no, catg_id=catg_id)
+      return self.PLListProducts(client_rec, m_nls, user_id, page_no=page_no, catg_id=catg_id)
     elif payload_cmd == PAYLOAD_HOTPRODUCTS:
       page_no = 1
       if len(payloads) > 1: page_no = int(payloads[1])
-      return self.doHotProducts(client_rec, m_nls, user_id, page_no=page_no)
+      return self.PLHotProducts(client_rec, m_nls, user_id, page_no=page_no)
     elif payload_cmd == PAYLOAD_VIEWCART:
-      return self.doViewCart(client_rec, m_nls, user_id)
+      return self.PLViewCart(client_rec, m_nls, user_id)
     elif payload_cmd == PAYLOAD_QUICKHELP:
-      return self.doQuickHelp(client_rec, m_nls, user_id)
+      return self.PLQuickHelp(client_rec, m_nls, user_id)
     elif payload_cmd == PAYLOAD_FINDPRODUCTS:
-      return self.doGetProductsByName(client_rec, user_id, int(payloads[2]), payloads[1])
+      return self.PLGetProductsByName(client_rec, user_id, int(payloads[2]), payloads[1])
     elif payload_cmd == PAYLOAD_ORDERDETAILS:
-      return self.doOrderDetails(client_rec, user_id, payloads[1])
+      return self.PLOrderDetails(client_rec, user_id, payloads[1])
     elif payload_cmd == PAYLOAD_GETSTARTED:
-      return self.doGetStarted(client_rec, m_nls, user_id)
+      return self.PLGetStarted(client_rec, m_nls, user_id)
     elif payload_cmd == PAYLOAD_PRODUCTS_PRICE_MAX:
       price = payloads[1]
-      return self.doGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price under " + price, max_price=price)
+      return self.PLGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price under " + price, max_price=price)
     elif payload_cmd == PAYLOAD_PRODUCTS_PRICE_MIN:
       price = payloads[1]
-      return self.doGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price above " + price, min_price=price)
+      return self.PLGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price above " + price, min_price=price)
     elif payload_cmd == PAYLOAD_PRODUCTS_PRICE_BETWEEN:
       prices = payloads[1].split("&")
       min_price = prices[0]
       max_price = prices[1]
-      return self.doGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price between " + min_price + " and " + max_price, min_price=min_price, max_price=max_price)
+      return self.PLGetProductsByPrice(client_rec, user_id, int(payloads[2]), "The products which the price between " + min_price + " and " + max_price, min_price=min_price, max_price=max_price)
+    elif payload_cmd == PAYLOAD_PRODUCT_VARIATION:
+      product_id = payloads[1]
+      page = payloads[2]
+      return self.PLShowProductVariation(client_rec, m_nls, user_id, product_id, page)
     return False
 
   # called from rivescript subsubroutine by trigger 'rs_find_products"
@@ -158,7 +167,7 @@ class WcBot:
     client_rec = mdb.findClientByFbPageId(fb_page_id)
     name = " ".join([str(s) for s in args])
     try:
-      self.doGetProductsByName(client_rec, user_id, 1, name)
+      self.PLGetProductsByName(client_rec, user_id, 1, name)
     except Exception as exp:
       traceback.print_exc(file=sys.stdout)
 
@@ -177,7 +186,7 @@ class WcBot:
       mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
       return
     try:
-      self.doGetProductsByPrice(client_rec, user_id, 1, "The products which the price under " + price, max_price=price)
+      self.PLGetProductsByPrice(client_rec, user_id, 1, "The products which the price under " + price, max_price=price)
     except Exception as exp:
       traceback.print_exc(file=sys.stdout)
 
@@ -196,7 +205,7 @@ class WcBot:
       mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
       return
     try:
-      self.doGetProductsByPrice(client_rec, user_id, 1, "The products which the price above " + price, min_price=price)
+      self.PLGetProductsByPrice(client_rec, user_id, 1, "The products which the price above " + price, min_price=price)
     except Exception as exp:
       traceback.print_exc(file=sys.stdout)
 
@@ -220,7 +229,7 @@ class WcBot:
       min_price = max_price
       max_price = t
     try:
-      self.doGetProductsByPrice(client_rec, user_id, 1, "The products which the price between " + min_price + " and " + max_price, min_price=min_price, max_price=max_price)
+      self.PLGetProductsByPrice(client_rec, user_id, 1, "The products which the price between " + min_price + " and " + max_price, min_price=min_price, max_price=max_price)
     except Exception as exp:
       traceback.print_exc(file=sys.stdout)
 
@@ -259,9 +268,9 @@ class WcBot:
     mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
     return True
 
-  def doQuickHelp(self, client_rec, m_nls, user_id):
+  def PLQuickHelp(self, client_rec, m_nls, user_id):
     """
-    Handles rivescript _jsShowQuickHelp_ reply (see cms_wc.rive)
+    Handle Payload: Handles rivescript _jsShowQuickHelp_ reply (see cms_wc.rive)
     """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
@@ -271,9 +280,9 @@ class WcBot:
     mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
     return True
 
-  def doListProducts(self, client_rec, m_nls, user_id, page_no=1, catg_id=None, tag_id=None):
+  def PLListProducts(self, client_rec, m_nls, user_id, page_no=1, catg_id=None, tag_id=None):
     """
-    Handles rivescript _jsListProducts_ (see cms_wc.rive)
+    Handle Payload: Handles rivescript _jsListProducts_ (see cms_wc.rive)
     """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
@@ -288,16 +297,16 @@ class WcBot:
       self.raw_gensts = self.m_woocom.getGeneralSetting()
       self.parseGeneralSetting(self.raw_gensts)
     if catg_id is not None:
-      records = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no, category_id=catg_id)
+      products = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no, category_id=catg_id)
     else:
-      records = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no)
-    mgr_prods = self.productsToMessengerImages(records, PAYLOAD_LISTPRODUCTS, page_no)
+      products = self.m_woocom.getProductsList(ITEMS_PER_PAGE, page_no)
+    mgr_prods = self.productsToMessengerImages(products, PAYLOAD_LISTPRODUCTS, page_no)
     mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
     return True
 
-  def doHotProducts(self, client_rec, m_nls, user_id, page_no):
+  def PLHotProducts(self, client_rec, m_nls, user_id, page_no):
     """
-    Handles rivescript _jsListHotProducts_ reply (see cms_wc.rive)
+    Handle Payload: Handles rivescript _jsListHotProducts_ reply (see cms_wc.rive)
     """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
@@ -363,9 +372,9 @@ class WcBot:
     mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
     return True
 
-  def doViewProductDetail(self, product_id, client_rec, m_nls, user_id):
+  def PLViewProductDetail(self, product_id, client_rec, m_nls, user_id):
     """
-    Show product detail
+    Handle Payload: Show product detail
     """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(product_id, str)
@@ -376,6 +385,8 @@ class WcBot:
       self.raw_gensts = self.m_woocom.getGeneralSetting()
       self.parseGeneralSetting(self.raw_gensts)
     product = self.m_woocom.getProductDetail(product_id)
+    m_nls.setUserVar(user_id, RSVAR_CUR_PRODUCT, product_id)
+    m_nls.setUserVar(user_id, RSVAR_CUR_VAR_SELECTED, "")
     acc_tok = client_rec["facebook_page"]["access_token"]
     out_msg = "Thank you interesting on {0}...".format(product["name"])
     time.sleep(1)
@@ -417,22 +428,27 @@ class WcBot:
         out_msg += "Out of stock"
       mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
       time.sleep(1)
-    buttons = [{
-      "title": 'View on web',
-      "type": "web_url",
-      "url": product["permalink"]
-    }, {
-      "title": 'Add to Cart',
-      "type": "postback",
-      "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, product_id)
-    }]
-    out_msg = "Further act on this product:"
-    mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
+    if len(product["variations"]) > 0:
+      # Variations product handling...
+      self.doViewProductVariations(acc_tok, user_id, product)
+    else:
+      # conventional handling... Display buttons template
+      buttons = [{
+        "title": 'View on web',
+        "type": "web_url",
+        "url": product["permalink"]
+      }, {
+        "title": 'Add to Cart',
+        "type": "postback",
+        "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, product_id)
+      }]
+      out_msg = "Further act on this product:"
+      mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
     return True
 
-  def doAddProductToCart(self, product_id, client_rec, m_nls, user_id):
+  def PLAddProductToCart(self, product_id, client_rec, m_nls, user_id):
     """
-    Add product to shopping cart (db)
+    Handle Payload: Add product to shopping cart (db)
     """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(product_id, str)
@@ -470,7 +486,10 @@ class WcBot:
       mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, btns)
     return True
 
-  def doViewCart(self, client_rec, m_nls, user_id):
+  def PLViewCart(self, client_rec, m_nls, user_id):
+    """
+    Handle Payload: PAYLOAD_VIEWCART
+    """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
     assert m_nls is not None
@@ -497,7 +516,10 @@ class WcBot:
       mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, btns)
     return True
 
-  def doGetProductsByName(self, client_rec, user_id, page_no, name):
+  def PLGetProductsByName(self, client_rec, user_id, page_no, name):
+    """
+    Handle Payload: PAYLOAD_FINDPRODUCTS
+    """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(name, str)
     assert client_rec is not None
@@ -523,7 +545,10 @@ class WcBot:
     mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, mgr_prods)
     return True
 
-  def doGetProductsByPrice(self, client_rec, user_id, page_no, image_msg, min_price=None, max_price=None):
+  def PLGetProductsByPrice(self, client_rec, user_id, page_no, image_msg, min_price=None, max_price=None):
+    """
+    Handle Payload: PAYLOAD_PRODUCTS_PRICE_BETWEEN, _MAX or _MIN
+    """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
     assert isinstance(user_id, str)
@@ -595,7 +620,10 @@ class WcBot:
         mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
     return True
 
-  def doOrderDetails(self, client_rec, user_id, order_id):
+  def PLOrderDetails(self, client_rec, user_id, order_id):
+    """
+    Handle Payload: PAYLOAD_ORDERDETAILS
+    """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
     assert isinstance(user_id, str)
@@ -625,7 +653,10 @@ class WcBot:
     mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
     return True
 
-  def doGetStarted(self, client_rec, m_nls, user_id):
+  def PLGetStarted(self, client_rec, m_nls, user_id):
+    """
+    Handle Payload: PAYLOAD_GETSTARTED
+    """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert client_rec is not None
     assert m_nls is not None
@@ -739,41 +770,52 @@ class WcBot:
     else:
       return False
 
-  def productsToMessengerImages(self, records, payload_prefix, page_no):
+  def productsToMessengerImages(self, products, payload_prefix, page_no):
     """
     Create Messenger images template list from woocommerce products
+    Notes: 2018-03-09: Add support for product variation
     """
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
-    assert isinstance(records, list)
+    assert isinstance(products, list)
     assert isinstance(payload_prefix, str)
     results = []
     i = 0
-    for rec in records:
-      category = mod_misc.strMakeComma(rec["categories"])
+    for product in products:
+      category = mod_misc.strMakeComma(product["categories"])
       image = ""
-      if len(rec["images"]) > 0 and rec["images"][0]["src"] is not None:
-        image = rec["images"][0]["src"]
-      # logger.debug(rec)
-      price = mod_misc.wcMakeCurrencyStr(self.currcy_sts, float(rec["price"]))
-      results.append({
-        "title": rec["name"],
+      if len(product["images"]) > 0 and product["images"][0]["src"] is not None:
+        image = product["images"][0]["src"]
+      # logger.debug(product)
+      price = mod_misc.wcMakeCurrencyStr(self.currcy_sts, float(product["price"]))
+      result = {
+        "title": product["name"],
         "subtitle": "Category: {0}\nPrice {1}".format(category, price),
         "image_url": image,
         "buttons": [{
           "type": "postback",
           "title": "Detail",
-          "payload": "{0}_{1}".format(PAYLOAD_SHOWPRODUCT, rec["id"])
-        }, {
-          "type": 'postback',
-          "title": 'Add to Cart',
-          "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, rec["id"])
+          "payload": "{0}_{1}".format(PAYLOAD_SHOWPRODUCT, product["id"])
         }]
-      })
+      }
+      # Check it has product variation
+      if len(product["variations"]) == 0:
+        result["buttons"].append({
+          "title": 'Add to Cart',
+          "type": 'postback',
+          "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, product["id"])
+        })
+      else:
+        result["buttons"].append({
+          "title": "See variations",
+          "type": "postback",
+          "payload": "{0}_{1}_1".format(PAYLOAD_PRODUCT_VARIATION, product["id"])
+        })
+      results.append(result)
       i += 1
       if i == ITEMS_PER_PAGE:
         break
 
-    if len(records) >= ITEMS_PER_PAGE:
+    if len(products) >= ITEMS_PER_PAGE:
       results[ITEMS_PER_PAGE - 1]["buttons"].append({
         "type": 'postback',
         "title": 'Show More',
@@ -790,5 +832,78 @@ class WcBot:
     acc_tok = client_rec["facebook_page"]["access_token"]
     msg = "Thank you! I noticed that you've placed an order. Below is the order details:"
     mod_messenger.sendMessengerTextMessage(acc_tok, user_id, msg)
-    self.doOrderDetails(client_rec, user_id, order_id)
+    self.PLOrderDetails(client_rec, user_id, order_id)
+    return True
+
+  def doViewProductVariations(self, acc_tok, user_id, product):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(acc_tok, str)
+    assert isinstance(user_id, str)
+    assert product is not None
+    assert self.m_woocom is not None
+    attributes = []
+    messages = []
+    for attr in product["attributes"]:
+      attributes.append(attr["name"])
+      messages.append("Different " + attr["name"])
+    msg = "This product has multiple variations: " + ", ".join(attributes)
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, msg)
+
+    time.sleep(1)
+    msg = "Do you want to see the variations of {0}?".format(product["name"])
+    buttons = [{
+      "title": "Show variations",
+      "type": "postback",
+      "payload": "{0}_{1}_1".format(PAYLOAD_PRODUCT_VARIATION, product["id"])
+    }]
+    mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, msg, buttons)
+    return True
+
+  def PLShowProductVariation(self, client_rec, m_nls, user_id, product_id, page_no):
+    """
+    Handle Payload: PAYLOAD_PRODUCT_VARIATION
+    """
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert client_rec is not None
+    assert m_nls is not None
+    assert isinstance(user_id, str)
+    assert isinstance(product_id, str)
+    assert isinstance(page_no, str)
+    assert self.m_woocom is not None
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    product = self.m_woocom.getProductDetail(product_id)
+    msg = product["name"] + " variations:"
+    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, msg)
+    variations = self.m_woocom.getProductVariations(product_id, ITEMS_PER_PAGE, page_no)
+    # cur_var_selected format: {"[name]": "[value]""}. e.g. {"Color", "36"} - 36 is product_id
+    images = []
+    cur_var_selected = m_nls.getUserVar(user_id, RSVAR_CUR_VAR_SELECTED)
+    for variation in variations:
+      titles = []
+      for lattr in variation["attributes"]:
+        titles.append(lattr["option"])
+      subtitle = "In stock"
+      if not variation["in_stock"]:
+        subtitle = "Out of stock"
+      images.append({
+        "title": ", ".join(titles),
+        "subtitle": subtitle,
+        "image_url": variation["image"]["src"],
+        "buttons": [{
+          "title": 'View on web',
+          "type": "web_url",
+          "url": variation["permalink"]
+        }, {
+          "title": 'Add to Cart',
+          "type": "postback",
+          "payload": "{0}_{1}".format(PAYLOAD_ADDTOCART, variation["id"])
+        }]
+      })
+    if len(variations) >= ITEMS_PER_PAGE:
+      images[ITEMS_PER_PAGE - 1]["buttons"].append({
+        "type": 'postback',
+        "title": 'Show More Variations',
+        "payload": "{0}_{1}_{2}".format(PAYLOAD_PRODUCT_VARIATION, product_id, int(page_no) + 1)
+      })
+    mod_messenger.sendMessengerImagesMessage(acc_tok, user_id, images)
     return True

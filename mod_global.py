@@ -7,7 +7,7 @@ from inspect import currentframe, getframeinfo
 
 # logger = mod_misc.initLogger(__name__)
 global APP_NAME, IS_DEBUG, SERVER_VERSION
-SERVER_VERSION = "1.1.0"
+SERVER_VERSION = "1.2.0"
 APP_NAME = "WCBOT"
 if "DEBUG_MODE" in os.environ:
   IS_DEBUG = os.environ["DEBUG_MODE"] == "1"

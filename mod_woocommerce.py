@@ -86,6 +86,19 @@ class Wc:
       logger.error(traceback.format_exc())
       raise exp
 
+  def getProductVariations(self, product_id, item_per_page, page_no):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(product_id, str)
+    assert isinstance(item_per_page, int)
+    assert isinstance(page_no, str)
+    url = "products/{0}/variations?per_page={1}&page={2}".format(product_id, item_per_page, page_no)
+    try:
+      r = self.wcapi.get(url)
+      return json.loads(mod_misc.wcCorrectResp(r.text))
+    except Exception as exp:
+      logger.error(traceback.format_exc())
+      raise exp
+
   def getProductDetailByIds(self, product_ids):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(product_ids, list)

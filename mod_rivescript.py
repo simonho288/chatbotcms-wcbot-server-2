@@ -45,6 +45,12 @@ class Nls:
     assert isinstance(userId, str)
     return self.rsbot.get_uservars(userId)
 
+  def getUserVar(self, userId, name):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(userId, str)
+    assert isinstance(name, str)
+    return self.rsbot.get_uservar(userId, name)
+
   def setUserVar(self, userId, name, value):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     assert isinstance(userId, str)
