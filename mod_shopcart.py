@@ -73,13 +73,26 @@ class ShoppingCart:
     image = ""
     if len(product["images"]) > 0:
       image = product["images"][0]["src"]
-    cart_items.append({
-      "product_id": product["id"],
-      "name": product["name"],
-      "qty": 1,
-      "unit_price": product["price"],
-      "image": image
-    })
+    if product["type"] != "variation":
+      # Simple product
+      item_obj = {
+        "product_id": product["id"],
+        "name": product["name"],
+        "qty": 1,
+        "unit_price": product["price"],
+        "image": image
+      }
+    else:
+      item_obj = {
+        "product_id": product["id"],
+        "variation_id": product["parent_id"],
+        "name": product["name"],
+        "qty": 1,
+        "unit_price": product["price"],
+        "image": image
+      }
+      # Variation product
+    cart_items.append(item_obj)
     if self.doc is None:
       self.doc = {
         "cart_items": cart_items,

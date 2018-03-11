@@ -182,7 +182,7 @@ class Wc:
     assert iinfo["shipping"]["country"] is not None
     assert isinstance(items, list)
     for item in items:
-      assert item["product_id"] is not None
+      assert item["product_id"] != 0
       assert item["qty"] is not None
       assert item["unit_price"] is not None
 
@@ -222,11 +222,12 @@ class Wc:
     if "address2" in iinfo["shipping"]:
       postData["shipping"]["address_2"] = iinfo["shipping"]["address2"]
     for item in items:
-      postData["line_items"].append({
+      item_obj = {
         "product_id": item["product_id"],
         "quantity": int(item["qty"]),
         "price": float(item["unit_price"])
-      })
+      }
+      postData["line_items"].append(item_obj)
     url = "orders"
     try:
       r = self.wcapi.post(url, postData)

@@ -44,7 +44,7 @@ function RenderItemsIntoTable() {
     var item = null
     for (var j = 0; j < window._shoppingCart.cart_items.length; j++) {
       var ci = window._shoppingCart.cart_items[j]
-      if (ci.product_id == orderItem.product_id) {
+      if (ci.product_id == orderItem.product_id || ci.product_id == orderItem.variation_id) {
         item = ci
         break
       }

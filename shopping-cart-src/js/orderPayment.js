@@ -395,7 +395,7 @@ function RenderScreen() {
     var item = null
     for (var j = 0, len2 = window._shoppingCart.cart_items.length; j < len2; ++j) {
       var ci = window._shoppingCart.cart_items[j]
-      if (ci.product_id == orderItem.product_id) {
+      if (ci.product_id == orderItem.product_id || ci.product_id == orderItem.variation_id) {
         item = ci
         break
       }
