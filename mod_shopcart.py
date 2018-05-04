@@ -119,7 +119,7 @@ class ShoppingCart:
     # assert self.doc["input_info"]["billing"]["address2"] is not None
     assert self.doc["input_info"]["billing"]["city"] is not None
     assert self.doc["input_info"]["billing"]["state"] is not None
-    assert self.doc["input_info"]["billing"]["postal"] is not None
+    # assert self.doc["input_info"]["billing"]["postal"] is not None
     assert self.doc["input_info"]["billing"]["country"] is not None
     assert self.doc["input_info"]["shipping"] is not None
     assert self.doc["input_info"]["shipping"]["first_name"] is not None
@@ -128,7 +128,7 @@ class ShoppingCart:
     # assert self.doc["input_info"]["shipping"]["address2"] is not None
     assert self.doc["input_info"]["shipping"]["city"] is not None
     assert self.doc["input_info"]["shipping"]["state"] is not None
-    assert self.doc["input_info"]["shipping"]["postal"] is not None
+    # assert self.doc["input_info"]["shipping"]["postal"] is not None
     assert self.doc["input_info"]["shipping"]["country"] is not None
     m_wc = mod_woocommerce.Wc(url, consumer_key, consumer_secret)
     return m_wc.createOrder(self.doc["input_info"], self.doc["cart_items"])

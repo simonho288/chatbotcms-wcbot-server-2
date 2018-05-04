@@ -23,11 +23,11 @@ class Wc:
     assert isinstance(url, str)
     assert isinstance(consumer_key, str)
     assert isinstance(consumer_secret, str)
+    # HARDCODE for client debug
     # if "DEBUG_MODE" in os.environ:
-      # HARDCODE for client debug
-      # url = "https://chinasilver.jewelry"
-      # consumer_key = "ck_6bb8ab8217c188dc40ec71691a569f510103b9b1"
-      # consumer_secret = "cs_13484c8b154e2d65aa1d3e1a27652291b5f7e782"
+    #   url = "https://chinasilver.jewelry"
+    #   consumer_key = "ck_6bb8ab8217c188dc40ec71691a569f510103b9b1"
+    #   consumer_secret = "cs_13484c8b154e2d65aa1d3e1a27652291b5f7e782"
     self.wcapi = API(
       url=url,
       consumer_key=consumer_key,
@@ -173,7 +173,7 @@ class Wc:
     # assert iinfo["billing"]["address2"] is not None
     assert iinfo["billing"]["city"] is not None
     assert iinfo["billing"]["state"] is not None
-    assert iinfo["billing"]["postal"] is not None
+    # assert iinfo["billing"]["postal"] is not None
     assert iinfo["billing"]["country"] is not None
     assert iinfo["shipping"] is not None
     assert iinfo["shipping"]["first_name"] is not None
@@ -182,7 +182,7 @@ class Wc:
     # assert iinfo["shipping"]["address2"] is not None
     assert iinfo["shipping"]["city"] is not None
     assert iinfo["shipping"]["state"] is not None
-    assert iinfo["shipping"]["postal"] is not None
+    # assert iinfo["shipping"]["postal"] is not None
     assert iinfo["shipping"]["country"] is not None
     assert isinstance(items, list)
     for item in items:
@@ -202,7 +202,7 @@ class Wc:
         # "address_2": iinfo["billing"]["address2"],
         "city": iinfo["billing"]["city"],
         "state": iinfo["billing"]["state"],
-        "postcode": iinfo["billing"]["postal"],
+        # "postcode": iinfo["billing"]["postal"],
         "country": iinfo["billing"]["country"],
         "email": iinfo["billing"]["email"],
         "phone": iinfo["billing"]["phone"]
@@ -214,13 +214,17 @@ class Wc:
         # "address_2": iinfo["shipping"]["address2"],
         "city": iinfo["shipping"]["city"],
         "state": iinfo["shipping"]["state"],
-        "postcode": iinfo["shipping"]["postal"],
+        # "postcode": iinfo["shipping"]["postal"],
         "country": iinfo["shipping"]["country"],
         "email": iinfo["shipping"]["email"],
         "phone": iinfo["shipping"]["phone"]
       },
       "line_items": []
     }
+    if "postal" in iinfo["billing"]:
+      postData["billing"]["postal"] = iinfo["billing"]["postal"]
+    if "postal" in iinfo["shipping"]:
+      postData["shipping"]["postal"] = iinfo["shipping"]["postal"]
     if "address2" in iinfo["billing"]:
       postData["billing"]["address_2"] = iinfo["billing"]["address2"]
     if "address2" in iinfo["shipping"]:
