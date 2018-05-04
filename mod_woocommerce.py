@@ -23,11 +23,6 @@ class Wc:
     assert isinstance(url, str)
     assert isinstance(consumer_key, str)
     assert isinstance(consumer_secret, str)
-    # HARDCODE for client debug
-    # if "DEBUG_MODE" in os.environ:
-    #   url = "https://chinasilver.jewelry"
-    #   consumer_key = "ck_6bb8ab8217c188dc40ec71691a569f510103b9b1"
-    #   consumer_secret = "cs_13484c8b154e2d65aa1d3e1a27652291b5f7e782"
     self.wcapi = API(
       url=url,
       consumer_key=consumer_key,
