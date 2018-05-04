@@ -380,6 +380,7 @@ class Mdb:
     assert isinstance(user_id, str)
     assert isinstance(fb_page_id, str)
     assert doc is not None
+    doc = mod_misc.remove_empty_string(doc)
     table = dynamodb.Table(DYNAMO_COLL_SHOP_CART)
     resp = table.update_item(
       Key = {

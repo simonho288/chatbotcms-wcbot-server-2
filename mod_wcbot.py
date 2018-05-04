@@ -385,10 +385,11 @@ class WcBot:
       self.raw_gensts = self.m_woocom.getGeneralSetting()
       self.parseGeneralSetting(self.raw_gensts)
     product = self.m_woocom.getProductDetail(product_id)
+    product_name = mod_misc.strRemoveMarkup(product["name"])
     m_nls.setUserVar(user_id, RSVAR_CUR_PRODUCT, product_id)
     m_nls.setUserVar(user_id, RSVAR_CUR_VAR_SELECTED, "")
     acc_tok = client_rec["facebook_page"]["access_token"]
-    out_msg = "Thank you interesting on {0}...".format(product["name"])
+    out_msg = "Thank you interesting on {0}...".format(product_name)
     time.sleep(1)
     mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
     out_msg = mod_misc.strRemoveMarkup(product["description"])

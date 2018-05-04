@@ -126,6 +126,8 @@ def strRemoveMarkup(html):
   """
   cleanr = re.compile('<.*?>')
   cleantext = re.sub(cleanr, '', html)
+  # additional cleanup
+  cleantext = re.sub('&nbsp;', ' ', cleantext, flags=re.IGNORECASE)
   return cleantext
 
 def dumpJsonToFile(obj, fname="temp.json"):

@@ -7,7 +7,7 @@ from inspect import currentframe, getframeinfo
 
 # logger = mod_misc.initLogger(__name__)
 global APP_NAME, IS_DEBUG, SERVER_VERSION
-SERVER_VERSION = "1.2.0"
+SERVER_VERSION = "1.2.1"
 APP_NAME = "WCBOT"
 if "DEBUG_MODE" in os.environ:
   IS_DEBUG = os.environ["DEBUG_MODE"] == "1"
@@ -29,4 +29,7 @@ def server_entry(request, remove_path=None):
     url = url[:len(url) - len(remove_path)]
   SERVER_URL = url + "/"
   SERVER_URL_ROOT = request.url_root
+  if "DEBUG_MODE" in os.environ and "DEBUG_SERVER" in os.environ:
+    if request.remote_addr == "127.0.0.1" or request.remote_addr == "localhost":
+      SERVER_URL = os.environ["DEBUG_SERVER"]
   print("SERVER_URL=" + SERVER_URL)

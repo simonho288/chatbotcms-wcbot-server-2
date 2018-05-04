@@ -23,17 +23,21 @@ class Wc:
     assert isinstance(url, str)
     assert isinstance(consumer_key, str)
     assert isinstance(consumer_secret, str)
-    # self.url = url
-    # self.consumer_key = consumer_key
-    # self.consumer_secret = consumer_secret
+    # if "DEBUG_MODE" in os.environ:
+      # HARDCODE for client debug
+      # url = "https://chinasilver.jewelry"
+      # consumer_key = "ck_6bb8ab8217c188dc40ec71691a569f510103b9b1"
+      # consumer_secret = "cs_13484c8b154e2d65aa1d3e1a27652291b5f7e782"
     self.wcapi = API(
       url=url,
       consumer_key=consumer_key,
       consumer_secret=consumer_secret,
       wp_api=True,
       version="wc/v2",
+      verify_ssl=False,
+      query_string_auth=True,
       timeout=30, # requires especially for WooCommerce connects with Jetpack
-      query_string_auth=True
+      # query_string_auth=True
     )
   
   def getGeneralSetting(self):
