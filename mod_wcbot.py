@@ -22,8 +22,8 @@ MSG_NO_MORE_CATEGORIES = "No more categories"
 MSG_EMPTY_CART = "The shopping cart is empty!"
 MSG_NO_HOT_PRODUCTS = "Sorry, no hot products today!"
 MSG_EMPTY_CART_DONE = "The shopping cart is empty now"
-MSG_BROWSE_CART = "There has {0} {1} in your shopping cart. You can browse it now"
-MSG_CONNECT_ERROR = "Oops! There has connection problem with WooCommerce server :( Please report to admin!"
+MSG_BROWSE_CART = "There is {0} {1} in your shopping cart. You can browse it now"
+MSG_CONNECT_ERROR = "Oops! There is connection problem with WooCommerce server :( Please report to admin!"
 MSG_NO_ORDERS_FOUND = "You have no orders in our record"
 # Messenger platform payload
 PAYLOAD_GETSTARTED = "GETSTARTED" # Messenger predefined
@@ -503,7 +503,7 @@ class WcBot:
     if m_shopcart.getCartItem() is not None:
       item_count = len(m_shopcart.getCartItem())
     if item_count == 0:
-      out_msg = "There has no item in shopping cart."
+      out_msg = "There is no item in shopping cart."
       mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
     else:
       btns = [{

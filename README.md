@@ -30,7 +30,7 @@ We spent lot of efforts to achieve this. The purpose is obvious... We can focus 
 
 ## The Source Codes
 
-There has two main codesets in WcBot server:
+There is two main codesets in WcBot server:
 1. WcBot Web Server
 2. Shopping Cart Mini-website
 
@@ -309,7 +309,7 @@ WcBot has built-in shopping cart mini site. It allows customers to view cart, in
 
 #### Build & deploy the shopping cart website
 
-The shopping cart building processes is to minify the source codes and copy to the destination directory `/shopping-cart/`. It uses Gulp to build. There has two main tasks defined in `gulpfile.js`:
+The shopping cart building processes is to minify the source codes and copy to the destination directory `/shopping-cart/`. It uses Gulp to build. There is two main tasks defined in `gulpfile.js`:
 
 Task 1: Build the shopping cart
 
