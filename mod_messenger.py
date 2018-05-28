@@ -70,30 +70,37 @@ class Messenger:
     assert self.m_wcbot is not None
     user_id = msg["sender"]["id"] # end user's messenger id
     fb_page_id = msg["recipient"]["id"] # target facebook page id
-    message = None; sticker_id = None
-    if "sticker_id" in msg["message"] is not None:
-      sticker_id = msg["message"]["sticker_id"]
-      logger.debug("user_id=%s, fb_page_id=%s, sticker_id=%d", user_id, fb_page_id, sticker_id)
-    elif "text" in msg["message"] is not None:
-      message = msg["message"]["text"]
-      logger.debug("user_id=%s, fb_page_id=%s, message=%s", user_id, fb_page_id, message)
+    message = None
+    sticker_id = None
     client_rec = self.getClientRecByFbPageId(fb_page_id)
     access_token = client_rec["facebook_page"]["access_token"]
     sendMessengerTyping(access_token, user_id, True)
-    time.sleep(3)
+    time.sleep(1)
     usrvar_rec = self.m_db.findRsUserVarsByUserAndPage(user_id, fb_page_id)
     c_nls = mod_rivescript.Nls(user_id, fb_page_id)
     c_nls.setSubroutines(self.m_wcbot)
     if (usrvar_rec is not None):
       c_nls.setUserVars(user_id, json.loads(usrvar_rec["doc"]))
-    if sticker_id is not None:
+    if "sticker_id" in msg["message"] is not None:
+      sticker_id = msg["message"]["sticker_id"]
       reply = c_nls.getReply(user_id, sticker_id=sticker_id)
-    elif message is not None:
+      logger.debug("reply: %s", reply)
+      logger.debug("user_id=%s, fb_page_id=%s, sticker_id=%d", user_id, fb_page_id, sticker_id)
+      if len(reply) > 0:
+        if not self.m_wcbot.filterReplyCommand(reply, client_rec, c_nls, user_id):
+          sendMessengerTextMessage(access_token, user_id, reply)
+    elif "quick_reply" in msg["message"] is not None:    
+      payload = msg["message"]["quick_reply"]["payload"]
+      logger.debug("user_id=%s, fb_page_id=%s, payload=%s", user_id, fb_page_id, payload)
+      self.handlePostback(msg)
+    elif "text" in msg["message"] is not None:
+      message = msg["message"]["text"]
       reply = c_nls.getReply(user_id, message=message)
-    logger.debug("reply: %s", reply)
-    if len(reply) > 0:
-      if not self.m_wcbot.filterReplyCommand(reply, client_rec, c_nls, user_id):
-        sendMessengerTextMessage(access_token, user_id, reply)
+      logger.debug("reply: %s", reply)
+      logger.debug("user_id=%s, fb_page_id=%s, message=%s", user_id, fb_page_id, message)
+      if len(reply) > 0:
+        if not self.m_wcbot.filterReplyCommand(reply, client_rec, c_nls, user_id):
+          sendMessengerTextMessage(access_token, user_id, reply)
     usrvar_rs = c_nls.getUserVars(user_id)
     self.m_db.updateRsUserVars(user_id, fb_page_id, usrvar_rs)
 
@@ -102,10 +109,15 @@ class Messenger:
     assert msg is not None
     assert isinstance(msg["sender"]["id"], str)
     assert isinstance(msg["recipient"]["id"], str)
-    assert isinstance(msg["postback"]["payload"], str)
     user_id = msg["sender"]["id"] # end user's messenger id
     fb_page_id = msg["recipient"]["id"] # target facebook page id
-    payload = msg["postback"]["payload"]
+    if "postback" in msg:
+      payload = msg["postback"]["payload"]
+    elif "quick_reply" in msg["message"]:
+      payload = msg["message"]["quick_reply"]["payload"]
+    else:
+      print(msg)
+      raise Exception("can't find payload: " + msg)
     logger.debug("user_id=%s, fb_page_id=%s, message=%s", user_id, fb_page_id, payload)
     client_rec = self.getClientRecByFbPageId(fb_page_id)
     access_token = client_rec["facebook_page"]["access_token"]
@@ -119,8 +131,8 @@ class Messenger:
     if not self.m_wcbot.filterPostbackPayload(payload, client_rec, c_nls, user_id):
       logger.warn("%s-%s: Unhandled postback payload: %s", str(currentframe().f_lineno), inspect.stack()[0][3], payload)
       # any payload needs to handle in messenger webhook level?
-    usrvar_rs = c_nls.getUserVars(user_id)
-    self.m_db.updateRsUserVars(user_id, fb_page_id, usrvar_rs)
+    # usrvar_rs = c_nls.getUserVars(user_id)
+    # self.m_db.updateRsUserVars(user_id, fb_page_id, usrvar_rs)
 
 ###############################################################################
 # Messenger Send API functions
@@ -159,6 +171,24 @@ def sendMessengerTextMessage(access_token, user_id, text):
   data = {
     "recipient": { "id": user_id },
     "message": { "text": text }
+  }
+  qs = "access_token=" + access_token
+  url = FBSRV_URL + "me/messages?" + qs
+  # logger.debug("url = %s", url)
+  return _checkApiError(requests.post(url, json=data))
+
+def sendMessengerQuickReplies(access_token, user_id, message, replies):
+  logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  assert isinstance(access_token, str)
+  assert isinstance(user_id, str)
+  assert isinstance(message, str)
+  assert isinstance(replies, list)
+  data = {
+    "recipient": { "id": user_id },
+    "message": {
+      "text": message,
+      "quick_replies": replies
+    }
   }
   qs = "access_token=" + access_token
   url = FBSRV_URL + "me/messages?" + qs

@@ -24,15 +24,14 @@ class Wc:
     assert isinstance(consumer_key, str)
     assert isinstance(consumer_secret, str)
     self.wcapi = API(
-      url=url,
-      consumer_key=consumer_key,
-      consumer_secret=consumer_secret,
-      wp_api=True,
-      version="wc/v2",
-      verify_ssl=False,
-      query_string_auth=True,
-      timeout=30, # requires especially for WooCommerce connects with Jetpack
-      # query_string_auth=True
+      url = url,
+      consumer_key = consumer_key,
+      consumer_secret = consumer_secret,
+      wp_api = True,
+      version = "wc/v2",
+      verify_ssl = False,
+      query_string_auth = True,
+      timeout = 30, # requires especially for WooCommerce connects with Jetpack
     )
   
   def getGeneralSetting(self):

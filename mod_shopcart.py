@@ -173,5 +173,3 @@ class ShoppingCart:
     if self.doc is not None:
       self.doc["order_pool"] = orderpool
     self.m_db.updateShopcartOrderpool(self.user_id, self.fb_page_id, orderpool)
-
-

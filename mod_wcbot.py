@@ -27,7 +27,7 @@ MSG_CONNECT_ERROR = "Oops! There is connection problem with WooCommerce server :
 MSG_NO_ORDERS_FOUND = "You have no orders in our record"
 # Messenger platform payload
 PAYLOAD_GETSTARTED = "GETSTARTED" # Messenger predefined
-PAYLOAD_SHOWCATEGORY = "PLSHOWCATEGORY" # page_no, category_id
+# PAYLOAD_SHOWCATEGORY = "PLSHOWCATEGORY" # page_no, category_id
 PAYLOAD_LISTPRODUCTS = "PLLISTPRODUCTS" # page_no, categroy_id, tag_id
 PAYLOAD_HOTPRODUCTS = "PLHOTPRODUCTS"
 PAYLOAD_LISTCATEGORIES = "PLLISTCATEGORIES" # page no
@@ -42,6 +42,7 @@ PAYLOAD_PRODUCTS_PRICE_MAX = "PLPRODUCTSPRICEMAX"
 PAYLOAD_ORDERDETAILS = "PLORDERDETAILS" # order_id
 PAYLOAD_QUICKHELP = "PLQUICKHELP"
 PAYLOAD_PRODUCT_VARIATION = "PLPRODUCTVAR"
+PAYLOAD_LISTORDERS = "PLLISTORDERS"
 # Rivescript variable name
 RSVAR_CUR_PRODUCT = "wcCurrentProduct"
 RSVAR_FBUSER_PROFILE = "fbUserProfile"
@@ -153,6 +154,12 @@ class WcBot:
       product_id = payloads[1]
       page = payloads[2]
       return self.PLShowProductVariation(client_rec, m_nls, user_id, product_id, page)
+    elif payload_cmd == PAYLOAD_LISTCATEGORIES:
+      page_no = 1
+      if len(payloads) > 1: page_no = int(payloads[1])
+      return self.doListCategories(client_rec, m_nls, user_id, page_no)
+    elif payload_cmd == PAYLOAD_LISTORDERS:
+      return self.doListAllOrders(client_rec, m_nls, user_id)
     return False
 
   # called from rivescript subsubroutine by trigger 'rs_find_products"
@@ -268,6 +275,17 @@ class WcBot:
     mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
     return True
 
+  # def PLQuickHelp(self, client_rec, m_nls, user_id):
+  #   """
+  #   Handle Payload: Handles rivescript _jsShowQuickHelp_ reply (see cms_wc.rive)
+  #   """
+  #   logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+  #   assert client_rec is not None
+  #   assert m_nls is not None
+  #   assert isinstance(user_id, str)
+  #   msg = "* QUICK HELP *" + CR + "You can send me the command like:" + CR + "  show products" + CR + "  show hot products" + CR + "  show category" + CR + "  show all order" + CR + "  view shopping cart" + CR + "  find product tshirt" + CR + "  product price under 30" + CR + "  product price between 10 and 20"
+  #   mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
+  #   return True
   def PLQuickHelp(self, client_rec, m_nls, user_id):
     """
     Handle Payload: Handles rivescript _jsShowQuickHelp_ reply (see cms_wc.rive)
@@ -276,8 +294,50 @@ class WcBot:
     assert client_rec is not None
     assert m_nls is not None
     assert isinstance(user_id, str)
-    msg = "* QUICK HELP *" + CR + "You can send me the command like:" + CR + "  show products" + CR + "  show hot products" + CR + "  show category" + CR + "  show all order" + CR + "  view shopping cart" + CR + "  find product tshirt" + CR + "  product price under 30" + CR + "  product price between 10 and 20"
-    mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
+    acc_tok = client_rec["facebook_page"]["access_token"]
+    fb_page_id = client_rec["fb_page_id"]
+    if self.m_woocom is None:
+      rec_wc = client_rec["woocommerce"]
+      self.m_woocom = mod_woocommerce.Wc(rec_wc["url"], rec_wc["consumer_key"], rec_wc["consumer_secret"])
+    # actions = ['show products', 'hot products', 'show categories']
+    # actions.append('show all orders')
+    # actions.append('view shopping cart')
+    replies = [{
+      "content_type": "text",
+      "title": "Show products",
+      "payload": "{0}_1".format(PAYLOAD_LISTPRODUCTS),
+    }, {
+      "content_type": "text",
+      "title": "Hot products",
+      "payload": "{0}_1".format(PAYLOAD_HOTPRODUCTS),
+    }, {
+      "content_type": "text",
+      "title": "Show categories",
+      "payload": "{0}_{1}".format(PAYLOAD_LISTCATEGORIES, 1)
+    }]
+    # Determine to show "View cart"
+    m_shopcart = mod_shopcart.ShoppingCart(user_id, client_rec["fb_page_id"])
+    m_shopcart.loadFromDatabase()
+    items = m_shopcart.getCartItem()
+    if len(items) > 0:
+      replies.append({
+        "content_type": "text",
+        "title": "View cart",
+        "payload": PAYLOAD_VIEWCART,
+      })
+    # Determine to show "View orders"
+    m_db = mod_database.Mdb()
+    orders = m_db.getOrderByUserAndFbpage(user_id, fb_page_id)
+    if orders is not None and len(orders) > 0:
+      replies.append({
+        "content_type": "text",
+        "title": "My orders",
+        "payload": PAYLOAD_LISTORDERS,
+      })
+
+    # Show all in messenger    
+    msg = "* QUICK HELP *" + CR + "Please select below action, or send me the commands like:" + CR + "  find product tshirt" + CR + "  product price under 30" + CR + "  product price between 10 and 20"
+    mod_messenger.sendMessengerQuickReplies(acc_tok, user_id, msg, replies)
     return True
 
   def PLListProducts(self, client_rec, m_nls, user_id, page_no=1, catg_id=None, tag_id=None):
@@ -349,20 +409,22 @@ class WcBot:
     records = self.m_woocom.getProductCategoriesList(ITEMS_PER_PAGE, page_no)
     mgr_prods = [] # messenger items template
     for rec in records:
-      image = ""
-      if rec["image"] is not None:
-        image = rec["image"]["src"]
-      # logger.debug(rec)
-      mgr_prods.append({
-        "title": rec["name"],
-        "subtitle": rec["description"],
-        "image_url": image,
-        "buttons": [{
-          "type": "postback",
-          "title": "See {0} products".format(rec["count"]),
-          "payload": "{0}_1_{1}".format(PAYLOAD_LISTPRODUCTS, rec["id"])
-        }]
-      })
+      productsCount = rec["count"]
+      if productsCount > 0:
+        image = ""
+        if rec["image"] is not None:
+          image = rec["image"]["src"]
+        # logger.debug(rec)
+        mgr_prods.append({
+          "title": rec["name"],
+          "subtitle": rec["description"],
+          "image_url": image,
+          "buttons": [{
+            "type": "postback",
+            "title": "See {0} products".format(productsCount),
+            "payload": "{0}_1_{1}".format(PAYLOAD_LISTPRODUCTS, rec["id"])
+          }]
+        })
     if len(records) >= ITEMS_PER_PAGE:
       mgr_prods[ITEMS_PER_PAGE - 1]["buttons"].append({
         "type": 'postback',
@@ -597,6 +659,7 @@ class WcBot:
       self.parseGeneralSetting(self.raw_gensts)
     m_db = mod_database.Mdb()
     orders = m_db.getOrderByUserAndFbpage(user_id, fb_page_id)
+    # orders = None
     # print("orders:")
     # print(orders)
     if orders is None:
