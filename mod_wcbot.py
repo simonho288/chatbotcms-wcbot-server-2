@@ -287,6 +287,7 @@ class WcBot:
   #   msg = "* QUICK HELP *" + CR + "You can send me the command like:" + CR + "  show products" + CR + "  show hot products" + CR + "  show category" + CR + "  show all order" + CR + "  view shopping cart" + CR + "  find product tshirt" + CR + "  product price under 30" + CR + "  product price between 10 and 20"
   #   mod_messenger.sendMessengerTextMessage(client_rec["facebook_page"]["access_token"], user_id, msg)
   #   return True
+
   def PLQuickHelp(self, client_rec, m_nls, user_id):
     """
     Handle Payload: Handles rivescript _jsShowQuickHelp_ reply (see cms_wc.rive)
@@ -300,9 +301,6 @@ class WcBot:
     if self.m_woocom is None:
       rec_wc = client_rec["woocommerce"]
       self.m_woocom = mod_woocommerce.Wc(rec_wc["url"], rec_wc["consumer_key"], rec_wc["consumer_secret"])
-    # actions = ['show products', 'hot products', 'show categories']
-    # actions.append('show all orders')
-    # actions.append('view shopping cart')
     replies = [{
       "content_type": "text",
       "title": "Show products",
@@ -335,7 +333,6 @@ class WcBot:
         "title": "My orders",
         "payload": PAYLOAD_LISTORDERS,
       })
-
     # Show all in messenger    
     msg = "* QUICK HELP *" + CR + "Please select below action, or send me the commands like:" + CR + "  find product tshirt" + CR + "  product price under 30" + CR + "  product price between 10 and 20"
     mod_messenger.sendMessengerQuickReplies(acc_tok, user_id, msg, replies)
