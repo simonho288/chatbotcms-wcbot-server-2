@@ -21,6 +21,7 @@ class Messenger:
     self.m_db = mod_database.Mdb()
     self.m_wcbot = mod_wcbot.WcBot()
     self.client_rec = None
+    self.c_nls = None
 
   def getClientRecByFbPageId(self, fb_page_id):
     if self.client_rec is not None:
@@ -61,6 +62,15 @@ class Messenger:
           raise Exception("Unhandled message type (either message nor postback)!")
     return "ok"
 
+  def _postMessageCleanup(self, access_token, user_id, fb_page_id):
+    logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
+    assert isinstance(access_token, str)
+    assert isinstance(user_id, str)
+    assert isinstance(fb_page_id, str)
+    sendMessengerTyping(access_token, user_id, False)
+    usrvar_rs = self.c_nls.getUserVars(user_id)
+    self.m_db.updateRsUserVars(user_id, fb_page_id, usrvar_rs)
+
   def handleMessage(self, msg):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
     # logger.debug(json.dumps(msg))
@@ -68,6 +78,7 @@ class Messenger:
     assert isinstance(msg["sender"]["id"], str)
     assert isinstance(msg["recipient"]["id"], str)
     assert self.m_wcbot is not None
+    is_process_post_action = True
     user_id = msg["sender"]["id"] # end user's messenger id
     fb_page_id = msg["recipient"]["id"] # target facebook page id
     message = None
@@ -77,32 +88,34 @@ class Messenger:
     sendMessengerTyping(access_token, user_id, True)
     time.sleep(1)
     usrvar_rec = self.m_db.findRsUserVarsByUserAndPage(user_id, fb_page_id)
-    c_nls = mod_rivescript.Nls(user_id, fb_page_id)
-    c_nls.setSubroutines(self.m_wcbot)
+    if self.c_nls is None:
+      self.c_nls = mod_rivescript.Nls(user_id, fb_page_id)
+      self.c_nls.setSubroutines(self.m_wcbot)
     if (usrvar_rec is not None):
-      c_nls.setUserVars(user_id, json.loads(usrvar_rec["doc"]))
+      self.c_nls.setUserVars(user_id, json.loads(usrvar_rec["doc"]))
     if "sticker_id" in msg["message"] is not None:
       sticker_id = msg["message"]["sticker_id"]
-      reply = c_nls.getReply(user_id, sticker_id=sticker_id)
+      reply = self.c_nls.getReply(user_id, sticker_id=sticker_id)
       logger.debug("reply: %s", reply)
       logger.debug("user_id=%s, fb_page_id=%s, sticker_id=%d", user_id, fb_page_id, sticker_id)
       if len(reply) > 0:
-        if not self.m_wcbot.filterReplyCommand(reply, client_rec, c_nls, user_id):
+        if not self.m_wcbot.filterReplyCommand(reply, client_rec, self.c_nls, user_id):
           sendMessengerTextMessage(access_token, user_id, reply)
     elif "quick_reply" in msg["message"] is not None:    
       payload = msg["message"]["quick_reply"]["payload"]
       logger.debug("user_id=%s, fb_page_id=%s, payload=%s", user_id, fb_page_id, payload)
       self.handlePostback(msg)
+      is_process_post_action = False
     elif "text" in msg["message"] is not None:
       message = msg["message"]["text"]
-      reply = c_nls.getReply(user_id, message=message)
+      reply = self.c_nls.getReply(user_id, message=message)
       logger.debug("reply: %s", reply)
       logger.debug("user_id=%s, fb_page_id=%s, message=%s", user_id, fb_page_id, message)
       if len(reply) > 0:
-        if not self.m_wcbot.filterReplyCommand(reply, client_rec, c_nls, user_id):
+        if not self.m_wcbot.filterReplyCommand(reply, client_rec, self.c_nls, user_id):
           sendMessengerTextMessage(access_token, user_id, reply)
-    usrvar_rs = c_nls.getUserVars(user_id)
-    self.m_db.updateRsUserVars(user_id, fb_page_id, usrvar_rs)
+    if is_process_post_action:
+      self._postMessageCleanup(access_token, user_id, fb_page_id)
 
   def handlePostback(self, msg):
     logger.debug(str(currentframe().f_lineno) + ":" + inspect.stack()[0][3] + "()")
@@ -124,15 +137,15 @@ class Messenger:
     sendMessengerTyping(access_token, user_id, True)
     time.sleep(3)
     usrvar_rec = self.m_db.findRsUserVarsByUserAndPage(user_id, fb_page_id)
-    c_nls = mod_rivescript.Nls(user_id, fb_page_id)
-    c_nls.setSubroutines(self.m_wcbot)
+    if self.c_nls is None:
+      self.c_nls = mod_rivescript.Nls(user_id, fb_page_id)
+      self.c_nls.setSubroutines(self.m_wcbot)
     if (usrvar_rec is not None):
-      c_nls.setUserVars(user_id, json.loads(usrvar_rec["doc"]))
-    if not self.m_wcbot.filterPostbackPayload(payload, client_rec, c_nls, user_id):
+      self.c_nls.setUserVars(user_id, json.loads(usrvar_rec["doc"]))
+    if not self.m_wcbot.filterPostbackPayload(payload, client_rec, self.c_nls, user_id):
       logger.warn("%s-%s: Unhandled postback payload: %s", str(currentframe().f_lineno), inspect.stack()[0][3], payload)
       # any payload needs to handle in messenger webhook level?
-    # usrvar_rs = c_nls.getUserVars(user_id)
-    # self.m_db.updateRsUserVars(user_id, fb_page_id, usrvar_rs)
+    self._postMessageCleanup(access_token, user_id, fb_page_id)
 
 ###############################################################################
 # Messenger Send API functions

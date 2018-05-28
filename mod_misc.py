@@ -160,9 +160,13 @@ def getPaypalUrlsByMode(mode):
       "pp_url": "https://www.paypal.com/cgi-bin/webscr"
     }
 
-def timestampToString(timestamp):
+def timestampToDatetime(timestamp):
   assert timestamp is not None
   return datetime.datetime.fromtimestamp(timestamp / 1000).strftime("%Y-%m-%d %H:%M")
+
+def timestampToDate(timestamp):
+  assert timestamp is not None
+  return datetime.datetime.fromtimestamp(timestamp / 1000).strftime("%Y-%m-%d")
 
 # Used to remove empty string before save the dictionary to DynamoDb
 def remove_empty_string(d):

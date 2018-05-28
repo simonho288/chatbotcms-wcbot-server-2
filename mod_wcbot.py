@@ -49,6 +49,7 @@ RSVAR_FBUSER_PROFILE = "fbUserProfile"
 RSVAR_CUR_VAR_SELECTED = "wcCurVarSelected"
 CR = "\n"
 ITEMS_PER_PAGE = 10
+MAX_ORDERS = 10
 
 logger = mod_misc.initLogger(__name__)
 
@@ -669,19 +670,41 @@ class WcBot:
       order_str = "order"
       if len(orders) > 1:
         order_str = "orders"
-        orders = sorted(orders, key=lambda k: k["doc"]["order_id"])
-      out_msg = "I found you have {0} {1} in our record...".format(len(orders), order_str)
+        orders = sorted(orders, key=lambda k: k["doc"]["order_id"], reverse=True)
+      out_msg = "I found you have {0} {1} in our record.".format(len(orders), order_str)
       mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+      if len(orders) > MAX_ORDERS:
+        out_msg = "Below are the recent {0} orders...".format(MAX_ORDERS)
+      else:
+        out_msg = "Below are the recent orders...".format(len(orders), order_str)
+      replies = []
+      o_count = 0
       for order in orders:
         order_doc = order["doc"]
         wcorder = order_doc["wcorder"]
-        out_msg = "Order no.: " + str(order_doc["order_id"]) + CR + "Date: " + mod_misc.timestampToString(order_doc["created_at"]) + CR + "Total: " + wcorder["currency"] + wcorder["total"]
-        buttons = [{
-          "title": 'Order #' + str(order_doc["order_id"]) + " details",
-          "type": "postback",
+        title = mod_misc.timestampToDate(order_doc["created_at"]) + ' ' + wcorder["currency"] + wcorder["total"]
+        title = "Ord# {0}".format(order_doc["order_id"])
+        replies.append({
+          "content_type": "text",
+          "title": title,
           "payload": "{0}_{1}".format(PAYLOAD_ORDERDETAILS, order["id"])
-        }]
-        mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
+        })
+        o_count += 1
+        if o_count >= MAX_ORDERS:
+          break;
+      mod_messenger.sendMessengerQuickReplies(acc_tok, user_id, out_msg, replies)
+      # time.sleep(3)
+      # for order in orders:
+      #   order_doc = order["doc"]
+      #   wcorder = order_doc["wcorder"]
+      #   # out_msg = "Order no.: " + str(order_doc["order_id"]) + CR + "Date: " + mod_misc.timestampToString(order_doc["created_at"]) + CR + "Total: " + wcorder["currency"] + wcorder["total"]
+      #   buttons = [{
+      #     "title": 'Order #' + str(order_doc["order_id"]) + " details",
+      #     "type": "postback",
+      #     "payload": "{0}_{1}".format(PAYLOAD_ORDERDETAILS, order["id"])
+      #   }]
+      #   # mod_messenger.sendMessengerButtonMessage(acc_tok, user_id, out_msg, buttons)
+      #   # time.sleep(1)
     return True
 
   def PLOrderDetails(self, client_rec, user_id, order_id):
@@ -701,20 +724,25 @@ class WcBot:
       self.m_woocom = mod_woocommerce.Wc(rec_wc["url"], rec_wc["consumer_key"], rec_wc["consumer_secret"])
     wcorder_id = ord["order_id"]
     wcorder = self.m_woocom.getOrder(wcorder_id)
-    out_msg = "Order# {0} details".format(wcorder_id) + ":" + CR
-    out_msg += "Date: {0}".format(mod_misc.timestampToString(ord["created_at"])) + CR
-    out_msg += "Total: {0}{1}".format(ord["wcorder"]["currency"], ord["wcorder"]["total"]) + CR
-    out_msg += "Payment method: " + wcorder["payment_method_title"] + CR
-    out_msg += "Bill to: " + wcorder["billing"]["first_name"] + " " + wcorder["billing"]["last_name"] + CR
-    out_msg += "Items:" + CR
-    for item in wcorder["line_items"]:
-      out_msg += "  " + item["name"] + ", Qty: " + str(item["quantity"]) + ", Subtotal: " + item["subtotal"] + CR
-    out_msg += "Ship to: " + wcorder["shipping"]["first_name"] + " " + wcorder["shipping"]["last_name"] + CR
-    out_msg += "Address: " + wcorder["shipping"]["address_1"] + " " + wcorder["shipping"]["address_2"] + wcorder["shipping"]["city"] + " " + wcorder["shipping"]["state"] + wcorder["shipping"]["country"] + CR
-    out_msg += "Shipping method:" + CR
-    for shipline in wcorder["shipping_lines"]:
-      out_msg += "  " + shipline["method_title"] + ": " + shipline["total"] + CR
-    mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+    if 'code' in wcorder:
+      if wcorder['code'] == 'woocommerce_rest_shop_order_invalid_id':
+        out_msg = "Can't find the order in server! It maybe deleted by the store admin."
+        mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
+    else:
+      out_msg = "Order# {0} details".format(wcorder_id) + ":" + CR
+      out_msg += "Date: {0}".format(mod_misc.timestampToDatetime(ord["created_at"])) + CR
+      out_msg += "Total: {0}{1}".format(ord["wcorder"]["currency"], ord["wcorder"]["total"]) + CR
+      out_msg += "Payment method: " + wcorder["payment_method_title"] + CR
+      out_msg += "Bill to: " + wcorder["billing"]["first_name"] + " " + wcorder["billing"]["last_name"] + CR
+      out_msg += "Items:" + CR
+      for item in wcorder["line_items"]:
+        out_msg += "  " + item["name"] + ", Qty: " + str(item["quantity"]) + ", Subtotal: " + item["subtotal"] + CR
+      out_msg += "Ship to: " + wcorder["shipping"]["first_name"] + " " + wcorder["shipping"]["last_name"] + CR
+      out_msg += "Address: " + wcorder["shipping"]["address_1"] + " " + wcorder["shipping"]["address_2"] + wcorder["shipping"]["city"] + " " + wcorder["shipping"]["state"] + wcorder["shipping"]["country"] + CR
+      out_msg += "Shipping method:" + CR
+      for shipline in wcorder["shipping_lines"]:
+        out_msg += "  " + shipline["method_title"] + ": " + shipline["total"] + CR
+      mod_messenger.sendMessengerTextMessage(acc_tok, user_id, out_msg)
     return True
 
   def PLGetStarted(self, client_rec, m_nls, user_id):
