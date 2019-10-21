@@ -31,5 +31,5 @@ simplejson==3.13.2
 six==1.11.0
 stripe==1.77.1
 urllib3==1.22
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 WooCommerce==1.2.1
